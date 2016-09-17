@@ -27,36 +27,45 @@
         <!-- ROO Core -->
         <module>runtime</module>
         <!-- ROO Addons -->
-        <module>addon-javabean</module>
-        <module>addon-plural</module>
-        <module>addon-propfiles</module>
         <module>addon-configurable</module>
-        <module>addon-jpa</module>
-        <module>addon-finder</module>
-        <module>addon-logging</module>
-        <module>addon-dod</module>
+        <module>addon-javabean</module>
+        <module>addon-propfiles</module>
+        <module>addon-plural</module>
         <module>addon-test</module>
+        <module>addon-jpa</module>
+        <module>addon-dto</module>
+        <module>addon-dod</module>
+        <module>addon-finder</module>
         <module>addon-backup</module>
         <module>addon-web-mvc-controller</module>
-        <module>addon-web-mvc-embedded</module>
-        <module>addon-web-mvc-jsp</module>
+        <module>addon-web-mvc-views</module>
+        <module>addon-web-mvc-thymeleaf</module>
+        <module>addon-web-mvc-i18n</module>
         <module>addon-security</module>
-        <module>addon-web-selenium</module>
-        <module>addon-jdbc</module>
-        <module>addon-dbre</module>
         <module>addon-creator</module>
-        <module>addon-json</module>
         <module>addon-layers-service</module>
         <module>addon-layers-repository-jpa</module>
         <module>addon-oscommands</module>
-        <module>addon-tailor</module>
+        <module>addon-push-in</module>
+        <module>addon-field</module>
+        <module>addon-cache</module>
+        <module>annotations</module>
+        <!-- Web UI -->
+        <module>web-ui</module>
+        
+        <!-- Excluded modules on Spring Roo 2.0.M2 -->
+        <!-- <module>addon-tailor</module>
         <module>addon-cloud</module>
         <module>addon-jms</module>
         <module>addon-email</module>
-        <module>annotations</module>
-        <!-- Web UI -->
-        <!-- <module>web-ui</module> -->
+        <module>addon-web-selenium</module>
+        <module>addon-jdbc</module>
+        <module>addon-dbre</module>
+        <module>addon-web-mvc-embedded</module>
+        <module>addon-web-mvc-jsp</module>
+        <module>addon-logging</module>-->
     </modules>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
@@ -76,15 +85,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>spring-roo-repository-snapshot</id>
-            <name>Spring Roo Repository</name>
-            <url>http://repo.spring.io/spring-roo/snapshot</url>
-            <snapshots>
-                <updatePolicy>never</updatePolicy>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
     </repositories>
     <pluginRepositories>
         <pluginRepository>
@@ -101,6 +101,7 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
+
     <developers>
         <developer>
             <name>Enrique Ruiz Valenciano</name>
@@ -120,7 +121,32 @@
             <email>jugade92 at gmail dot com</email>
             <timezone>+1</timezone>
         </developer>
+        <developer>
+            <name>Paula Navarro Alfonso</name>
+            <id>pn4v4rr0</id>
+            <email>ilenca1990 at gmail dot com</email>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <name>Sergio Clares Martínez</name>
+            <id>sclaresmt</id>
+            <email>sclaresmt at gmail dot com</email>
+            <timezone>+1</timezone>
+        </developer>
     </developers>
+
+    <properties>
+        <java.version>1.7</java.version>
+        <junit.version>4.11</junit.version>
+        <powermock.version>1.4.12</powermock.version>
+        <spring.version>4.3.1.RELEASE</spring.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <osgi.version>6.0.0</osgi.version>
+        <slf4j.version>1.7.12</slf4j.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <main.basedir>${basedir}</main.basedir>
+    </properties>
 
     <dependencyManagement>
         <dependencies>
@@ -128,13 +154,13 @@
             <!-- OSGi Core API -->
             <dependency>
                 <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.core</artifactId>
+                <artifactId>osgi.core</artifactId>
                 <version>${osgi.version}</version>
                 <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.osgi</groupId>
-                <artifactId>org.osgi.compendium</artifactId>
+                <artifactId>osgi.cmpn</artifactId>
                 <version>${osgi.version}</version>
                 <scope>provided</scope>
             </dependency>
@@ -143,7 +169,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.framework</artifactId>
-                <version>4.6.1</version>
+                <version>5.4.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.osgi</groupId>
@@ -163,11 +189,11 @@
                 <version>1.0.1</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>org.apache.felix</groupId>
+                        <groupId>org.osgi</groupId>
                         <artifactId>org.osgi.core</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.apache.felix</groupId>
+                        <groupId>org.osgi</groupId>
                         <artifactId>org.osgi.compendium</artifactId>
                     </exclusion>
                     <exclusion>
@@ -181,7 +207,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr</artifactId>
-                <version>1.8.2</version>
+                <version>2.0.4</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.osgi</groupId>
@@ -196,7 +222,7 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.scr.annotations</artifactId>
-                <version>1.9.10</version>
+                <version>1.9.12</version>
             </dependency>
 
             <!-- Apache Felix Shell -->
@@ -215,15 +241,24 @@
             <dependency>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>org.apache.felix.gogo.command</artifactId>
-                <version>0.14.0</version>
+                <version>0.16.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.osgi</groupId>
+                        <artifactId>org.osgi.core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.osgi</groupId>
+                        <artifactId>org.osgi.compendium</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.felix</groupId>
+                        <artifactId>org.apache.felix.bundlerepository</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Third party OSGi Bundles -->
-            <dependency>
-                <groupId>net.sourceforge.jline</groupId>
-                <artifactId>jline</artifactId>
-                <version>1.0.S2-B</version>
-            </dependency>
             <dependency>
                 <groupId>org.fusesource.jansi</groupId>
                 <artifactId>jansi</artifactId>
@@ -423,6 +458,16 @@
                 <artifactId>org.springframework.roo.wrapping.snakeyaml</artifactId>
                 <version>1.15.001</version>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.roo.wrapping</groupId>
+                <artifactId>org.springframework.roo.wrapping.jline</artifactId>
+                <version>1.0.S2-B.0013</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo.wrapping</groupId>
+                <artifactId>org.springframework.roo.wrapping.jsoup</artifactId>
+                <version>1.9.1.001</version>
+            </dependency>
 
             <!-- Roo Addons -->
             <dependency>
@@ -482,6 +527,11 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.field.addon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
                 <artifactId>org.springframework.roo.addon.jpa.addon</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -492,17 +542,12 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.roo</groupId>
-                <artifactId>org.springframework.roo.addon.finder</artifactId>
+                <artifactId>org.springframework.roo.addon.finder.addon</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.roo</groupId>
-                <artifactId>org.springframework.roo.addon.json.addon</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.roo</groupId>
-                <artifactId>org.springframework.roo.addon.json.annotations</artifactId>
+                <artifactId>org.springframework.roo.addon.finder.annotations</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -523,6 +568,26 @@
             <dependency>
                 <groupId>org.springframework.roo</groupId>
                 <artifactId>org.springframework.roo.addon.web.mvc.jsp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.web.mvc.views</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.web.mvc.thymeleaf.addon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.web.mvc.thymeleaf.annotations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.web.mvc.i18n</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -568,6 +633,16 @@
             <dependency>
                 <groupId>org.springframework.roo</groupId>
                 <artifactId>org.springframework.roo.addon.dbre.annotations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.dto.addon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.addon.dto.annotations</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- /Roo Addons -->
@@ -638,7 +713,32 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.propfiles.manager</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.application.config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.settings</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
                 <artifactId>org.springframework.roo.project</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.converters</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.roo</groupId>
+                <artifactId>org.springframework.roo.rest.publisher</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -708,8 +808,15 @@
                 <version>${powermock.version}</version>
                 <scope>test</scope>
             </dependency>
+            <!-- FreeMarker Bundle -->
+            <dependency>
+              <groupId>org.apache.servicemix.bundles</groupId>
+              <artifactId>org.apache.servicemix.bundles.freemarker</artifactId>
+              <version>2.3.23_1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
     <build>
         <extensions>
             <extension>
@@ -883,6 +990,22 @@
                         <dependenciesAsLibraries>true</dependenciesAsLibraries>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
+                    <artifactId>maven-java-formatter-plugin</artifactId>
+                    <version>0.4</version>
+                    <configuration>
+                        <lineEnding>LF</lineEnding>
+                        <configFile>${main.basedir}/devel-resources/eclipse-java-code-style-formatter.xml</configFile>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>format</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>               
             </plugins>
         </pluginManagement>
         <plugins>
@@ -890,18 +1013,32 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
             </plugin>
+            <plugin>
+                   <groupId>org.sonatype.plugins</groupId>
+                   <artifactId>nexus-staging-maven-plugin</artifactId>
+               </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
-    <properties>
-        <junit.version>4.11</junit.version>
-        <powermock.version>1.4.12</powermock.version>
-        <spring.version>3.2.8.RELEASE</spring.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <osgi.version>5.0.0</osgi.version>
-        <slf4j.version>1.7.5</slf4j.version>
-    </properties>
 
     <profiles>
+        <profile>
+            <id>jdk7</id>
+            <activation>
+                <jdk>1.7</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                           <groupId>org.apache.maven.plugins</groupId>
+                           <artifactId>maven-javadoc-plugin</artifactId>
+                       </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <!-- 
             Profile to prevent errors if Spring Roo is compiled using Java 8

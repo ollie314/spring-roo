@@ -15,12 +15,13 @@
         <!-- OSGi -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
+
         <!-- Apache Felix -->
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -30,6 +31,23 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+
+        <!-- JAX-RS -->
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-processing</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Roo -->
         <dependency>
             <groupId>org.springframework.roo</groupId>
@@ -60,9 +78,10 @@
             <artifactId>org.springframework.roo.process.manager</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.roo.wrapping</groupId>
-            <artifactId>org.springframework.roo.wrapping.snakeyaml</artifactId>
+            <groupId>org.springframework.roo</groupId>
+            <artifactId>org.springframework.roo.rest.publisher</artifactId>
         </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>junit</groupId>
@@ -73,4 +92,17 @@
             <artifactId>mockito-all</artifactId>
         </dependency>
     </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
+                <artifactId>maven-java-formatter-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <properties>
+        <main.basedir>${basedir}/../..</main.basedir>
+    </properties>
 </project>

@@ -15,11 +15,11 @@
         <!-- OSGi -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
         <!-- Apache Felix -->
         <dependency>
@@ -76,4 +76,18 @@
             <artifactId>org.springframework.roo.support</artifactId>
         </dependency>
     </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
+                <artifactId>maven-java-formatter-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <properties>
+        <main.basedir>${basedir}/..</main.basedir>
+    </properties>
+    
 </project>

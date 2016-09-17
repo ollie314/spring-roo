@@ -1,0 +1,398 @@
+# Create project, entities and project settings to be able to test subsequent commands.
+project setup --topLevelPackage aaa.bbb.cc
+jpa setup --provider HIBERNATE --database HYPERSONIC_IN_MEMORY
+settings add --name spring.roo.jpa.require.schema-object-name --value true
+enum type --class ~.enumerated.Enumerated
+
+#====================================================================================================================
+# TEST 1: Create entity with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test entity creation command with required dynamic mandatory options based on project settings.
+#
+entity jpa --class ~.domain.Entity1 --table ENTITY1_TABLE --identifierColumn identifier --sequenceName sequence --identifierStrategy SEQUENCE --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: Created SRC_MAIN_JAVA/aaa/bbb/cc/domain
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1.java
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_Jpa_Entity.aj
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_ToString.aj
+#
+# Result: Create Entity1 without errors.                                         
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 2: Create boolean field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test boolean field creation command with required dynamic mandatory options based on project settings.
+#
+field boolean --fieldName boolean_field --column boolean_column
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1.java
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create boolean_field without errors.                                        
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 3: Create date field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test date field creation command with required dynamic mandatory options based on project settings.
+#
+field date --fieldName date_field --type java.util.Date --column date_column
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create date_field without errors.                                        
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 4: Create enum field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test enum field creation command with required dynamic mandatory options based on project settings.
+#
+field enum --fieldName enum_field --type ~.enumerated.Enumerated --column enum_column
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create enum_field without errors.                                      
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 5: Create file field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test file field creation command with required dynamic mandatory options based on project settings.
+#
+field file --fieldName file_field --contentType JPG --column file_column
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create file_field without errors.                                        
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 6: Create number field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test number field creation command with required dynamic mandatory options based on project settings.
+#
+field number --fieldName number_field --type java.lang.Integer --column number_field
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create number_field without errors.                                        
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 7: Create other field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test other field creation command with required dynamic mandatory options based on project settings.
+#ROO-3710: 
+field other --fieldName other_field --type ~.enumerated.Enumerated --column other_field
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create other_field without errors.                                        
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 8: Create string field with required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test string field creation command with required dynamic mandatory options based on project settings.
+#
+field string --fieldName string_field --column string_column
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/aaa/aa/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create string_field without errors.                                        
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 9: Create read-only entity with GenerationType.SEQUENCE for @GeneratedValue
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test creation of a read-only entity with --readOnly and --identifierStrategy command options.
+#
+entity jpa --class ~.domain.ReadOnlyEntity --table READONLY_TABLE --identifierColumn id --sequenceName seq --readOnly --identifierStrategy SEQUENCE --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/ReadOnlyEntity.java
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/ReadOnlyEntity_Roo_Jpa_Entity.aj
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/ReadOnlyEntity_Roo_ToString.aj
+#
+# Result: Create read-only entity without errors.                                 
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 10: Create entity with GenerationType.TABLE for @GeneratedValue
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test creation of an entity with --identifierStrategy command option with TABLE value.
+#
+entity jpa --class ~.domain.TableEntity --table TABLE_ENTITY_TABLE --identifierColumn id --sequenceName seq --readOnly --identifierStrategy TABLE --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/TableEntity.java
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/TableEntity_Roo_Jpa_Entity.aj
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/TableEntity_Roo_ToString.aj
+#
+# Result: Create entity without errors.                          
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 11: Create entity with GenerationType.IDENTITY for @GeneratedValue
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test creation of an entity with --identifierStrategy command option with IDENTITY value.
+#
+entity jpa --class ~.domain.IdentityEntity --table IDENTITY_ENTITY_TABLE --identifierColumn id --sequenceName seq --readOnly --identifierStrategy IDENTITY --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/IdentityEntity.java
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/IdentityEntity_Roo_Jpa_Entity.aj
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/IdentityEntity_Roo_ToString.aj
+#
+# Result: Create entity without errors.                          
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 12: Create entity with GenerationType.AUTO for @GeneratedValue
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test creation of an entity with --identifierStrategy command option with AUTO value.
+#
+entity jpa --class ~.domain.AutoEntity --table AUTO_ENTITY_TABLE --identifierColumn id --sequenceName seq --readOnly --identifierStrategy AUTO --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/AutoEntity.java
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/AutoEntity_Roo_Jpa_Entity.aj
+#         Created SRC_MAIN_JAVA/aaa/bbb/cc/domain/AutoEntity_Roo_ToString.aj
+#
+# Result: Create entity without errors.                          
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 13: Create field set with @JoinTable with all its attributes
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test field set command with --joinTable param with value and all its associated attributes.
+#
+focus --class ~.domain.Entity1
+field set --fieldName set_field_complete_join_table --type ~.domain.TableEntity --cardinality MANY_TO_MANY --joinTable JOIN_TABLE --joinColumns COLUMN1_FK,COLUMN2_FK --referencedColumns COLUMN1,COLUMN2 --inverseJoinColumns INVERSE_COLUMN1_FK,INVERSE_COLUMN2_FK --inverseReferencedColumns INVERSE_COLUMN1,INVERSE_COLUMN2
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create field set without errors containing @JoinTable(name = "JOIN_TABLE", joinColumns = {...} 
+#         inverseJoinColumns = {...})                                  
+#====================================================================================================================
+
+
+##########################################################################
+#######                      MANUAL TESTS                        #########
+##########################################################################
+#                                                                        #
+# The following commands must be executed manually because they are      #
+# supposed to interrupt script execution.                                #
+#                                                                        #
+##########################################################################
+
+
+#====================================================================================================================
+# TEST 14: Try to create entity without required dynamic mandatory option "table", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option "table", based on 
+#         project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --identifierColumn identifier --sequenceName sequence --identifierStrategy SEQUENCE --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: You must specify option 'table' for this command
+#
+# Result: Stop command execution with a message requiring "table" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 15: Try to create entity without required dynamic mandatory option "identifierColumn", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option 
+#         "identifierColumn", based on project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --sequenceName sequence --identifierStrategy SEQUENCE --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: You must specify option 'identifierColumn' for this command
+#
+# Result: Stop command execution with a message requiring "identifierColumn" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 16: Try to create entity without required dynamic mandatory option "sequenceName", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option "sequenceName", 
+#         based on project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --identifierColumn identifier --identifierStrategy SEQUENCE --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: You must specify option 'sequenceName' for this command
+#
+# Result: Stop command execution with a message requiring "sequenceName" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 17: Try to create entity without required dynamic mandatory option "identifierStrategy", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option 
+#         "identifierStrategy", based on project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --identifierColumn identifier --versionField version --versionColumn VERSION --versionType long --sequenceName sequence
+#      
+# Output: You must specify option 'identifierStrategy' for this command
+#
+# Result: Stop command execution with a message requiring "identifierStrategy" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 18: Try to create entity without required dynamic mandatory option "versionField", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option "versionField", 
+#         based on project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --identifierColumn identifier --versionColumn VERSION --versionType long --sequenceName sequence --identifierStrategy SEQUENCE
+#      
+# Output: You must specify option 'versionField' for this command
+#
+# Result: Stop command execution with a message requiring "versionField" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 19: Try to create entity without required dynamic mandatory option "versionColumn", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option "versionColumn", 
+#         based on project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --identifierColumn identifier --versionType long --versionField version --sequenceName sequence --identifierStrategy SEQUENCE
+#      
+# Output: You must specify option 'versionColumn' for this command
+#
+# Result: Stop command execution with a message requiring "versionColumn" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 20: Try to create entity without required dynamic mandatory option "versionType", based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when required dynamic mandatory option "versionType", 
+#         based on project settings, is not provided.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --identifierColumn identifier --versionColumn VERSION --versionField version --sequenceName sequence --identifierStrategy SEQUENCE
+#      
+# Output: You must specify option 'versionType' for this command
+#
+# Result: Stop command execution with a message requiring "versionType" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 21: Try to create entity with a wrong value for "identifierStrategy"
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "entity jpa" command execution is aborted when option "identifierStrategy" is provided with a 
+#         wrong value.
+#
+#entity jpa --class ~.domain.Entity2 --table entity_table --identifierColumn identifier --sequenceName sequence --identifierStrategy UNKNOWN --versionField version --versionColumn VERSION --versionType long
+#      
+# Output: java.lang.IllegalArgumentException: Failed to convert 'UNKNOWN' to type GenerationType for option 'identifierStrategy'
+#         No enum constant org.springframework.roo.addon.jpa.addon.GenerationType.UNKNOWN
+#
+# Result: Stop command execution with a message requiring "identifierStrategy" option with a correct value.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 22: Try to create string field without required dynamic mandatory options, based by settings
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test if "field string" command execution is aborted when required dynamic mandatory option "column", based 
+#         on project settings, is not provided.
+#
+#field string --fieldName other_string_field
+#      
+# Output: You must specify option 'column' for this command
+#
+# Result: Stop command execution with a message requiring "column" option.                                 
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 23: Try to create field set with @JoinTable without any of its related attributes
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test field set command with --joinTable param with value and without any of its associated attributes when 
+#         schema object names are required.
+#
+#focus --class ~.domain.Entity1
+#field set --fieldName set_field_join_table1 --type ~.domain.TableEntity --cardinality MANY_TO_MANY --joinTable JOIN_TABLE
+#
+# Output: You must specify option 'joinColumns' for this command
+#
+# Result: Stop command execution with a message requiring "joinColumns" option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 24: Try to create field set with @JoinTable without value and with all of its related attributes
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test field set command with --joinTable param without value and with all of its related attributes when 
+#         schema object names are required.
+#
+#focus --class ~.domain.Entity1
+#field set --fieldName set_field_join_table2 --type ~.domain.TableEntity --cardinality MANY_TO_MANY --joinTable --joinColumns COLUMN1_FK,COLUMN2_FK --referencedColumns COLUMN1,COLUMN2 --inverseJoinColumns INVERSE_COLUMN1_FK,INVERSE_COLUMN2_FK --inverseReferencedColumns INVERSE_COLUMN1,INVERSE_COLUMN2
+#
+# Output: Undo manage ROOT/.roo/config/project.properties
+#         It is mandatory to assign a specific table name for --joinTable. Please, assign it a table name.
+#
+# Result: Stop command execution with a message requiring a specific value for --joinTable option.                               
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 25: Try to create field set without @JoinTable with ManyToMany cardinality
+#--------------------------------------------------------------------------------------------------------------------
+# Goal:   Test field set command without --joinTable and with --cardinality MANY_TO_MANY when schema object names are 
+#         required.
+#
+#focus --class ~.domain.Entity1
+#field set --fieldName set_field_join_table_cardinality --type ~.domain.TableEntity --cardinality MANY_TO_MANY
+#      
+# Output: You must specify option 'joinTable' for this command
+#
+# Result: Command execution stops because ManyToMany cardinality requires @JoinTable if specify schema object names 
+#         is also required.                         
+#====================================================================================================================
+
+
+#====================================================================================================================
+# TEST 26: Try to create field set without @JoinTable without required schema names but ManyToMany cardinality
+#--------------------------------------------------------------------------------------------------------------------
+# Preparation:
+#   
+# * settings remove --name spring.roo.jpa.require.schema-object-name  
+#
+# Goal:   Test field set command without --joinTable and with --cardinality MANY_TO_MANY when schema object names are 
+#         not required.
+#
+#focus --class ~.domain.Entity1
+#field set --fieldName set_field_join_table_cardinality --type ~.domain.TableEntity --cardinality MANY_TO_MANY
+#      
+# Output: Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1.java
+#         Updated SRC_MAIN_JAVA/aaa/bbb/cc/domain/Entity1_Roo_JavaBean.aj
+#
+# Result: Create field set without errors and without @JoinTable
+#====================================================================================================================

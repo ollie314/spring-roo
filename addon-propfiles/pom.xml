@@ -16,11 +16,11 @@
         <!-- OSGi -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
         <!-- Apache Felix -->
         <dependency>
@@ -64,14 +64,35 @@
             <groupId>org.springframework.roo</groupId>
             <artifactId>org.springframework.roo.support</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.roo</groupId>
+            <artifactId>org.springframework.roo.application.config</artifactId>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
         </dependency>
+		    <dependency>
+			      <groupId>org.powermock</groupId>
+			      <artifactId>powermock-api-mockito</artifactId>
+		    </dependency>
     </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
+                <artifactId>maven-java-formatter-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <properties>
+        <main.basedir>${basedir}/..</main.basedir>
+    </properties>
 </project>

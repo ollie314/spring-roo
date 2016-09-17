@@ -3,65 +3,74 @@ package org.springframework.roo.project;
 import java.io.IOException;
 
 import org.springframework.roo.model.JavaPackage;
+import org.springframework.roo.project.maven.Pom;
 import org.springframework.roo.project.packaging.PackagingProvider;
 
 /**
  * Provides Maven project operations.
  * 
  * @author Ben Alex
+ * @author Paula Navarro
  * @since 1.1
  */
 public interface MavenOperations extends ProjectOperations {
 
-    /**
-     * Creates a module within an existing Maven project
-     * 
-     * @param topLevelPackage the top-level Java package (required)
-     * @param parentPom the Maven coordinates of the parent POM (can be
-     *            <code>null</code> for none)
-     * @param moduleName the name and artifactId of the new module
-     * @param packagingType the packaging of the module (can be
-     *            <code>null</code> to use the default)
-     * @param majorJavaVersion the major Java version to which this module is
-     *            targetted (can be <code>null</code> to autodetect)
-     * @param artifactId the artifact ID of the module (defaults to moduleName)
-     */
-    void createModule(JavaPackage topLevelPackage, GAV parentPom,
-            String moduleName, PackagingProvider packagingType,
-            Integer majorJavaVersion, String artifactId);
+  /**
+   * Creates a module within an existing Maven project
+   * 
+   * @param parentPom the parent module pom  (can be
+   *            <code>null</code> to use the default)
+   * @param moduleName the name and artifactId of the new module
+   * @param packagingType the packaging of the module (can be
+   *            <code>null</code> to use the default)
+   * @param artifactId the artifact ID of the module (defaults to moduleName)
+   */
+  void createModule(Pom parentPom, String moduleName, PackagingProvider packagingType,
+      String artifactId);
 
-    /**
-     * Creates a Maven-based project
-     * 
-     * @param topLevelPackage the top-level Java package (required)
-     * @param projectName the name of the project (can be blank to generate it
-     *            from the top-level package)
-     * @param majorJavaVersion the major Java version to which this project is
-     *            targetted (can be <code>null</code> to autodetect)
-     * @param parentPom the Maven coordinates of the parent POM (can be
-     *            <code>null</code> for none)
-     * @param packagingType the packaging of the project (can be
-     *            <code>null</code> to use the default)
-     */
-    void createProject(JavaPackage topLevelPackage, String projectName,
-            Integer majorJavaVersion, GAV parentPom,
-            PackagingProvider packagingType);
+  /**
+   * Creates a Maven-based project
+   * 
+   * @param topLevelPackage the top-level Java package (required)
+   * @param projectName the name of the project (can be blank to generate it
+   *            from the top-level package)
+   * @param majorJavaVersion the major Java version to which this project is
+   *            targetted (can be <code>null</code> to autodetect)
+   * @param packagingType the packaging of the project (can be
+   *            <code>null</code> to use the default)
+   */
+  void createProject(JavaPackage topLevelPackage, String projectName, Integer majorJavaVersion,
+      PackagingProvider packagingType);
 
-    /**
-     * Executes the given Maven command
-     * 
-     * @param command the command and any arguments it requires (e.g.
-     *            "-o clean install")
-     * @throws IOException
-     */
-    void executeMvnCommand(String command) throws IOException;
+  /**
+   * Creates a multimodule Maven-based project
+   * 
+   * @param topLevelPackage the top-level Java package (required)
+   * @param projectName the name of the project (can be blank to generate it
+   *            from the top-level package)
+   * @param majorJavaVersion the major Java version to which this project is
+   *            targetted (can be <code>null</code> to autodetect)
+   * @param multimodule the multimodule architecture (required).
+   */
+  void createMultimoduleProject(JavaPackage topLevelPackage, String projectName,
+      Integer majorJavaVersion, Multimodule multimodule);
 
-    String getProjectRoot();
 
-    /**
-     * Indicates whether a new Maven project can be created
-     * 
-     * @return see above
-     */
-    boolean isCreateProjectAvailable();
+  /**
+   * Executes the given Maven command
+   * 
+   * @param command the command and any arguments it requires (e.g.
+   *            "-o clean install")
+   * @throws IOException
+   */
+  void executeMvnCommand(String command) throws IOException;
+
+  String getProjectRoot();
+
+  /**
+   * Indicates whether a new Maven project can be created
+   * 
+   * @return see above
+   */
+  boolean isCreateProjectAvailable();
 }

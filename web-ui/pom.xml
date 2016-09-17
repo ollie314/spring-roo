@@ -1,62 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.roo</groupId>
-		<artifactId>org.springframework.roo.osgi.bundle</artifactId>
-		<version>2.0.0.BUILD-SNAPSHOT</version>
-		<relativePath>../runtime/osgi-bundle</relativePath>
-	</parent>
-	<artifactId>org.springframework.roo.web.ui</artifactId>
-	<packaging>bundle</packaging>
-	<name>Spring Roo - Web UI</name>
-	<description>Web Tools</description>
-	<dependencies>
-		<!-- OSGi -->
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.osgi</groupId>
-			<artifactId>org.osgi.compendium</artifactId>
-		</dependency>
-		<!-- Apache Felix -->
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.scr.annotations</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.felix</groupId>
-			<artifactId>org.apache.felix.http.servlet-api</artifactId>
-			<version>1.0.1</version>
-		</dependency>
-		<!-- Jackson -->
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-core-asl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.jackson</groupId>
-			<artifactId>jackson-mapper-asl</artifactId>
-		</dependency>
-		<!-- Roo Dependencies -->
-		<dependency>
-			<groupId>org.springframework.roo</groupId>
-			<artifactId>org.springframework.roo.shell</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.roo</groupId>
-			<artifactId>org.springframework.roo.project</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.roo</groupId>
-			<artifactId>org.springframework.roo.addon.jpa.addon</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.roo</groupId>
-			<artifactId>org.springframework.roo.addon.dbre.addon</artifactId>
-		</dependency>
-	</dependencies>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.roo</groupId>
+        <artifactId>org.springframework.roo.osgi.bundle</artifactId>
+        <version>2.0.0.BUILD-SNAPSHOT</version>
+        <relativePath>../runtime/osgi-bundle</relativePath>
+    </parent>
+    <artifactId>org.springframework.roo.web.ui</artifactId>
+    <packaging>bundle</packaging>
+    <name>Spring Roo - Eastern Grey UI</name>
+    <description>
+    The Eastern Grey UI provided by Spring Roo is a browser-based GUI that 
+    lets the developer to call addon operations via the Spring Roo REST API.
+    </description>
+
+    <dependencies>
+        <!-- OSGi -->
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi.cmpn</artifactId>
+        </dependency>
+
+        <!-- Apache Felix Servlet API -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.servlet-api</artifactId>
+        </dependency>
+
+        <!-- Roo Dependencies -->
+        <dependency>
+            <groupId>org.springframework.roo</groupId>
+            <artifactId>org.springframework.roo.support</artifactId>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
+                <artifactId>maven-java-formatter-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <properties>
+        <bundle.activator>${project.artifactId}.Activator</bundle.activator>
+        <main.basedir>${basedir}/..</main.basedir>
+    </properties>
 </project>

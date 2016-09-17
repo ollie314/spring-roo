@@ -1,6 +1,6 @@
 package org.springframework.roo.addon.test.addon;
 
-import org.springframework.roo.addon.test.addon.IntegrationTestAnnotationValues;
+import org.springframework.roo.addon.test.addon.integration.IntegrationTestAnnotationValues;
 import org.springframework.roo.addon.test.annotations.RooIntegrationTest;
 import org.springframework.roo.classpath.details.annotations.populator.AnnotationValuesTestCase;
 
@@ -10,17 +10,16 @@ import org.springframework.roo.classpath.details.annotations.populator.Annotatio
  * @author Andrew Swan
  * @since 1.2.0
  */
-public class IntegrationTestAnnotationValuesTest
-        extends
-        AnnotationValuesTestCase<RooIntegrationTest, IntegrationTestAnnotationValues> {
+public class IntegrationTestAnnotationValuesTest extends
+    AnnotationValuesTestCase<RooIntegrationTest, IntegrationTestAnnotationValues> {
 
-    @Override
-    protected Class<RooIntegrationTest> getAnnotationClass() {
-        return RooIntegrationTest.class;
-    }
+  @Override
+  protected Class<RooIntegrationTest> getAnnotationClass() {
+    return RooIntegrationTest.class;
+  }
 
-    @Override
-    protected Class<IntegrationTestAnnotationValues> getValuesClass() {
-        return IntegrationTestAnnotationValues.class;
-    }
+  @Override
+  protected Class<IntegrationTestAnnotationValues> getValuesClass() {
+    return IntegrationTestAnnotationValues.class;
+  }
 }

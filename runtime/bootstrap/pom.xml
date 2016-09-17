@@ -31,19 +31,46 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- JAX-RS (JSR 339) -->
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.servlet-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>tomcat-servlet-api</artifactId>
-                    <groupId>org.apache.tomcat</groupId>
-                </exclusion>
-            </exclusions>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>asm-all-repackaged</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <!-- Jersey core Servlet 2.x implementation -->
+            <artifactId>jersey-container-servlet-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-processing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+        </dependency>
+
+        <!-- OSGi HTTP Service -->
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.http.api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.roo.wrapping</groupId>
@@ -91,6 +118,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.command</artifactId>
@@ -98,6 +126,10 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.gogo.runtime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.bundlerepository</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -117,10 +149,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.resolver</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.metatype</artifactId>
             <exclusions>
                 <exclusion>
@@ -132,6 +160,10 @@
         <dependency>
             <groupId>org.apache.aries.subsystem</groupId>
             <artifactId>org.apache.aries.subsystem.core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.aries.subsystem</groupId>
+            <artifactId>org.apache.aries.subsystem.api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.aries</groupId>
@@ -169,12 +201,8 @@
             <artifactId>jansi</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sourceforge.jline</groupId>
-            <artifactId>jline</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
+            <groupId>org.springframework.roo.wrapping</groupId>
+            <artifactId>org.springframework.roo.wrapping.jline</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -211,6 +239,15 @@
             <groupId>org.springframework.roo.wrapping</groupId>
             <artifactId>org.springframework.roo.wrapping.snakeyaml</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.roo.wrapping</groupId>
+            <artifactId>org.springframework.roo.wrapping.jsoup</artifactId>
+        </dependency>
+        <!-- FreeMarker Bundle -->
+        <dependency>
+		    <groupId>org.apache.servicemix.bundles</groupId>
+		    <artifactId>org.apache.servicemix.bundles.freemarker</artifactId>
+		</dependency>
     </dependencies>
     <build>
         <plugins>

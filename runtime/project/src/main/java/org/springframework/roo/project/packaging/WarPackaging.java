@@ -20,31 +20,32 @@ import org.springframework.roo.project.ProjectOperations;
  * The core {@link PackagingProvider} for web modules.
  * 
  * @author Andrew Swan
+ * @author Paula Navarro
  * @since 1.2.0
  */
 @Component
 @Service
 public class WarPackaging extends AbstractCorePackagingProvider {
 
-    public WarPackaging() {
-        super("war", "war-pom-template.xml");
-    }
+  public WarPackaging() {
+    super("war", "war-pom-template.xml", "child-war-pom-template.xml");
+  }
 
-    @Override
-    protected void createOtherArtifacts(final JavaPackage topLevelPackage,
-            final String module, final ProjectOperations projectOperations) {
-        super.createOtherArtifacts(topLevelPackage, module, projectOperations);
-        if (StringUtils.isBlank(module)) {
-            // This is a single-module web project
-            final String fullyQualifiedModuleName = getFullyQualifiedModuleName(
-                    module, projectOperations);
-            getApplicationContextOperations().createMiddleTierApplicationContext(
-                    topLevelPackage, fullyQualifiedModuleName);
-        }
+  @Override
+  protected void createOtherArtifacts(final JavaPackage topLevelPackage, final String module,
+      final ProjectOperations projectOperations) {
+    super.createOtherArtifacts(topLevelPackage, module, projectOperations);
+    if (StringUtils.isBlank(module)) {
+      // This is a single-module web project
+      final String fullyQualifiedModuleName =
+          getFullyQualifiedModuleName(module, projectOperations);
+      getApplicationContextOperations().createMiddleTierApplicationContext(topLevelPackage,
+          fullyQualifiedModuleName);
     }
+  }
 
-    public Collection<Path> getPaths() {
-        return Arrays.asList(SRC_MAIN_JAVA, SRC_TEST_JAVA, SRC_TEST_RESOURCES,
-                SPRING_CONFIG_ROOT, SRC_MAIN_WEBAPP);
-    }
+  public Collection<Path> getPaths() {
+    return Arrays.asList(SRC_MAIN_JAVA, SRC_TEST_JAVA, SRC_TEST_RESOURCES, SPRING_CONFIG_ROOT,
+        SRC_MAIN_WEBAPP);
+  }
 }

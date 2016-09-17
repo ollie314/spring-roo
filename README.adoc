@@ -26,16 +26,21 @@ If you are looking for *Reference Documentation* you can get it http://docs.spri
 
 image:https://lh4.googleusercontent.com/-_DpgkWvc3bQ/UUwmwkLNdlI/AAAAAAAAAhU/kG3QSpLOhtw/s301/Logo_SpringRoo.png["Spring Roo Logo"]
 
+== Code of Conduct
+
+This project adheres to the Contributor Covenant link:CODE_OF_CONDUCT.adoc[code of conduct]. By participating, you  are expected to uphold this code. Please report unacceptable behavior to spring-code-of-conduct@pivotal.io.
+
 == Developer Instructions
 
 These instructions detail how to get started with your freshly checked-out source tree. Follow next steps to develop Spring Roo yourself.
 
 . <<one-time-setup-instructions, One-time setup instructions>>
 . <<gpg-pgp-setup, GPG (PGP) Setup>>
-. <<developing-within-eclipse, Developing within eclipse>>
+. <<developing-roo, Developing Roo>>
 . <<running-the-command-line-tool, Running the command line tool>>
 . <<git-polices, Git Polices>>
 . <<git-tips, Git Tips>>
+. <<code-style, Code Style>>
 . <<releasing, Releasing>>
 . <<help, Help>>
 
@@ -117,20 +122,66 @@ You have *several options*:
 
 * Type the password in every time
 * Include a _-Dgpg.passphrase=thephrase_ argument when calling "mvn"
++
+[source,shell]
+----
+mvn clean install -Dgpg.passphrase=thephrase
+----
 * Edit _~/.bashrc_ and add _-Dgpg.passphrase=thephrase_ to _MAVEN_OPTS_
-* Edit your active Maven profile to include a _"gpg.passphrase"_ property:
-[source, shell]
-     <profiles>
-         <profile>
-             <properties>
-                 <gpg.passphrase>roorules</gpg.passphrase>
+* Edit your active Maven profile to include a _"gpg.passphrase"_ property with readle value:
++
+[source,shell]
+----
+<profiles>
+    <profile>
+        <properties>
+            <gpg.passphrase>roorules</gpg.passphrase>
+----
+* Use an encrypted  _"gpg.passphrase"_:
+.. Create a master password
++
+[source,shell]
+----
+mvn --encrypt-master-password <password>
+----
+.. Store this password in the _~/.m2/settings-security.xml_. It should look like:
++
+[source,xml]
+----
+<settingsSecurity>
+  <master>{jSMOWnoPFgsHVpMvz5VrIt5kRbzGpI8u+9EF1iFQyJQ=}</master>
+</settingsSecurity>
+----
+.. Encrypt gpg passphrase:
++
+[source,shell]
+----
+mvn --encrypt-password <passphrase>
+----
+.. Store it into your _settings.xml_ file in the server section. This will look like:
++
+[source,xml]
+----
+<settings>
+...
+  <servers>
+  ...
+    <server>
+      <id>gpg.passphrase</id>
+      <passphrase>{COQLCE6DU6GtcS5P=}</passphrase>
+    </server>
+  ...
+  </servers>
+...
+</settings>
+----
 
-Of course the most secure option is to type the password every time. However, *if you're doing a lot of builds* you might prefer automation.
+Of course the most secure options are to type the password every time and to encrypt the password. However, the most comfortable is to encrypt the password especially *if you're doing a lot of builds*.
 
 NOTE: _if you're new to GPG: don't lose your private key! Backup the secring.gpg file, as you'll need it to ever revoke your key or sign a replacement key (the public key servers offer no way to revoke a key unless you can sign the revocation request)._
 
-[[developing-within-eclipse]]
-== Developing within eclipse
+[[developing-roo]]
+== Developing Roo
 
 Spring Roo itself does not use *AspectJ*, it is a standard _Maven_ project and
 therefore any *standard IDE* can be used for development. No extra plugins are
@@ -138,10 +189,24 @@ needed.
 
 The team use https://www.eclipse.org/[Eclipse] or https://spring.io/tools[STS] 
 to develop Roo, just import the project as standard Maven project 
-via _File > Import > Maven > Existing Maven Projects_ into Workspace. 
+via _File > Import > Maven > Existing Maven Projects_ into Workspace.
 
 In theory you could use the https://www.eclipse.org/m2e/[m2eclipse plugin].
 The Roo team just tends to use the shell command _mvn_ instead.
+
+[[code-style]]
+=== Code Style
+
+Spring Roo project follows the https://github.com/google/styleguide[Google Code Style] convention.
+
+The http://mvnrepository.com/artifact/com.googlecode.maven-java-formatter-plugin/maven-java-formatter-plugin[Maven Java Formatter plugin] is included in the link:pom.xml[pom.xml] to format the Java source files using the https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml[Eclipse Java Code Format definition .xml file] included on the _devel-resources_ folder.
+
+[IMPORTANT]
+====
+Developers and contributors that uses STS or Eclipse should install the https://github.com/google/styleguide/blob/gh-pages/eclipse-java-google-style.xml[Eclipse Java Code Format definition .xml file] via _Window > Properties > Java > Code Style > Formatter > Import_
+
+Contributors must execute `mvn clean install` before sending the pull requests to be sure that Google Code Styles have been applied.
+====
 
 [[running-the-command-line-tool]]
 == Running the command line tool 
@@ -252,7 +317,7 @@ Roo is released on a regular basis by the *Roo project team*. To perform release
 
 Our release procedure may seem long, but that's because it includes many steps related to final testing and staging releases with other teams.
 
-=== Prerequisites:
+=== Prerequisites
 
 * *GPG setup* (probably already setup if you followed notes above)
 * *Git push privileges* (if you can commit, you have this)
@@ -265,7 +330,7 @@ Our release procedure may seem long, but that's because it includes many steps r
 * JIRA project *administrator privileges*
 * Close down your IDE before proceeding
 
-=== Release Procedure:
+=== Release Procedure
 
 . Complete a thorough testing build and assembly ZIP:
 +
@@ -349,7 +414,7 @@ git push
 
 If any problems are detected before step 8, *simply fix*, push and start from step 1 again. You have not deployed anything substantial (ie only the reference guide) until step 8, so some corrections and re-tagging can be performed without any difficulty. The critical requirement is to defer step 8 (and beyond) until you're sure everything is fine.
 
-=== Pre-notification testing:
+=== Pre-notification testing
 
 * Visit http://projects.spring.io/spring-roo/, click "Download!"
 * Ensure it unzips OK and the sha1sum matches the downloaded .sha

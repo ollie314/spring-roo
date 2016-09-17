@@ -13,22 +13,24 @@ import java.lang.annotation.Target;
  * 
  * @author Stefan Schmidt
  * @author Andrew Swan
+ * @author Juan Carlos García
  * @since 1.2.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface RooJpaRepository {
 
-    /**
-     * The name of this annotation's attribute that specifies the managed domain
-     * type.
-     */
-    String DOMAIN_TYPE_ATTRIBUTE = "domainType";
+  /**
+   * The name of this annotation's attribute that specifies the managed
+   * entity.
+   */
+  String ENTITY_ATTRIBUTE = "entity";
 
-    /**
-     * The domain type managed by the annotated repository
-     * 
-     * @return a non-<code>null</code> entity type
-     */
-    Class<?> domainType(); // No default => mandatory
+  /**
+   * The entity managed by the annotated repository
+   * 
+   * @return a non-<code>null</code> entity type
+   */
+  Class<?> entity(); // No default => mandatory
+
 }

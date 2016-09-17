@@ -8,39 +8,54 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * Redirect HTTP request to the given URL.
  * 
  * @author Juan Carlos García
+ * @author Enrique Ruiz at DISID Corporation S.L.
  * @since 2.0
- *
  */
 public class RedirectServlet extends HttpServlet {
 
-	public void init() throws ServletException {
+  /**  */
+  private static final long serialVersionUID = 1L;
 
-	}
+  private String redirectToURL;
 
-	// Method to handle GET method request.
-	public void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		// Set response content type
-		response.setContentType("text/html");
+  /**
+   * Configure with the URL to which this servlet must redirect.
+   * 
+   * @param url URL to redirect to.
+   */
+  public RedirectServlet(String url) {
+    this.redirectToURL = url;
+  }
 
-		// New location to be redirected
-		String site = "spring-roo/index.html";
+  /**
+   * Redirect to {@link #redirectToURL}
+   * 
+   * @param request
+   * @param response
+   */
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
 
-		response.setStatus(response.SC_MOVED_TEMPORARILY);
-		response.setHeader("Location", site);
-	}
+    // Set response content type
+    response.setContentType("text/html");
 
-	// Method to handle POST method request.
-	public void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		doGet(request, response);
+    response.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+    response.setHeader("Location", this.redirectToURL);
+  }
 
-	}
-
-	public void destroy() {
-		// do nothing.
-	}
-
+  /**
+   * Delegates on {@link #doGet(HttpServletRequest, HttpServletResponse)}
+   * 
+   * @param request
+   * @param response
+   */
+  @Override
+  public void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    doGet(request, response);
+  }
 }

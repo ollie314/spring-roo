@@ -22,11 +22,11 @@
         <!-- OSGi -->
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
+            <artifactId>osgi.core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <artifactId>osgi.cmpn</artifactId>
         </dependency>
         <!-- Apache Felix -->
         <dependency>
@@ -37,14 +37,6 @@
         <dependency>
             <groupId>org.springframework.roo</groupId>
             <artifactId>org.springframework.roo.addon.configurable.addon</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.roo</groupId>
-            <artifactId>org.springframework.roo.addon.web.mvc.controller.addon</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.roo</groupId>
-            <artifactId>org.springframework.roo.addon.web.mvc.jsp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.roo</groupId>
@@ -84,8 +76,18 @@
         </dependency>
     </dependencies>
 
-   	<properties>
-    	<target.jar.directory>${basedir}/../../target/all</target.jar.directory>  
-	</properties>
+   	<build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
+                <artifactId>maven-java-formatter-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <properties>
+        <target.jar.directory>${basedir}/../../target/all</target.jar.directory>
+        <main.basedir>${basedir}/../..</main.basedir>
+    </properties>
 	
 </project>
