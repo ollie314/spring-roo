@@ -1,30 +1,31 @@
 package org.springframework.roo.addon.web.mvc.views;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.felix.scr.annotations.Component;
+import org.jvnet.inflector.Noun;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.springframework.roo.addon.finder.addon.parser.FinderMethod;
+import org.springframework.roo.addon.javabean.addon.JavaBeanMetadata;
+import org.springframework.roo.addon.web.mvc.controller.addon.finder.SearchAnnotationValues;
+import org.springframework.roo.addon.web.mvc.controller.annotations.ControllerType;
 import org.springframework.roo.addon.web.mvc.i18n.I18nOperations;
 import org.springframework.roo.addon.web.mvc.i18n.I18nOperationsImpl;
-import org.springframework.roo.addon.javabean.addon.JavaBeanMetadata;
 import org.springframework.roo.classpath.PhysicalTypeIdentifier;
 import org.springframework.roo.classpath.PhysicalTypeMetadata;
 import org.springframework.roo.classpath.details.ClassOrInterfaceTypeDetails;
 import org.springframework.roo.classpath.details.FieldMetadata;
 import org.springframework.roo.classpath.details.FieldMetadataBuilder;
 import org.springframework.roo.classpath.details.MethodMetadata;
+import org.springframework.roo.classpath.details.annotations.AnnotationAttributeValue;
 import org.springframework.roo.classpath.details.annotations.AnnotationMetadata;
 import org.springframework.roo.classpath.details.annotations.AnnotationMetadataBuilder;
 import org.springframework.roo.classpath.itd.AbstractMemberDiscoveringItdMetadataProvider;
 import org.springframework.roo.classpath.itd.ItdTypeDetailsProvidingMetadataItem;
 import org.springframework.roo.classpath.scanner.MemberDetails;
 import org.springframework.roo.metadata.MetadataIdentificationUtils;
+import org.springframework.roo.model.EnumDetails;
 import org.springframework.roo.model.JavaSymbolName;
 import org.springframework.roo.model.JavaType;
 import org.springframework.roo.model.RooJavaType;
@@ -32,11 +33,19 @@ import org.springframework.roo.project.LogicalPath;
 import org.springframework.roo.project.ProjectOperations;
 import org.springframework.roo.propfiles.manager.PropFilesManagerService;
 
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
 /**
  * This abstract class will be extended by MetadataProviders focused on
- * view generation. 
- * 
- * As a result, it will be possible that all MetadataProviders that manages 
+ * view generation.
+ *
+ * As a result, it will be possible that all MetadataProviders that manages
  * view generation follows the same steps and the same operations to do it.
  *
  * @author Juan Carlos García
@@ -53,6 +62,7 @@ public abstract class AbstractViewGeneratorMetadataProvider extends
 
   public ClassOrInterfaceTypeDetails controller;
   public JavaType entity;
+  public ControllerType type;
   public boolean readOnly;
   public JavaType service;
   public List<FinderMethod> finders;
@@ -66,27 +76,27 @@ public abstract class AbstractViewGeneratorMetadataProvider extends
 
   /**
    * This operation returns the MVCViewGenerationService that should be used
-   * to generate views. 
-   * 
-   * Implements this operations in you views metadata providers to be able to 
+   * to generate views.
+   *
+   * Implements this operations in you views metadata providers to be able to
    * generate all necessary views.
-   * 
+   *
    * @return MVCViewGenerationService
    */
   protected abstract MVCViewGenerationService getViewGenerationService();
 
   /**
    * This operations returns the necessary Metadata that will generate .aj file.
-   * 
-   * This operation is called from getMetadata operation to obtain the return 
+   *
+   * This operation is called from getMetadata operation to obtain the return
    * element.
-   * 
+   *
    * @return ItdTypeDetailsProvidingMetadataItem
    */
   protected abstract ItdTypeDetailsProvidingMetadataItem createMetadataInstance();
 
   protected void fillContext(ViewContext ctx) {
-    // To be overridden if needed 
+    // To be overridden if needed
   }
 
   @Override
@@ -117,6 +127,12 @@ public abstract class AbstractViewGeneratorMetadataProvider extends
 
     Validate.notNull(entityAnnotation, "ERROR: Entity should be annotated with @RooJpaEntity");
 
+    Validate.notNull(controllerAnnotation.getAttribute("type"),
+        "@RooController annotation should have 'type' attribute.");
+    this.type =
+        ControllerType.getControllerType(((EnumDetails) controllerAnnotation.getAttribute("type")
+            .getValue()).getField().getSymbolName());
+
     // Getting identifierField
     List<FieldMetadata> identifierField = getPersistenceMemberLocator().getIdentifierFields(entity);
 
@@ -133,10 +149,48 @@ public abstract class AbstractViewGeneratorMetadataProvider extends
     this.identifierAccessor = getPersistenceMemberLocator().getIdentifierAccessor(entity);
 
     // Getting service
-    this.service = (JavaType) controllerAnnotation.getAttribute("service").getValue();
+    Set<ClassOrInterfaceTypeDetails> services =
+        getTypeLocationService().findClassesOrInterfaceDetailsWithAnnotation(
+            RooJavaType.ROO_SERVICE);
+    Iterator<ClassOrInterfaceTypeDetails> itServices = services.iterator();
 
-    // Getting path
-    this.controllerPath = (String) controllerAnnotation.getAttribute("path").getValue();
+    while (itServices.hasNext()) {
+      ClassOrInterfaceTypeDetails existingService = itServices.next();
+      AnnotationAttributeValue<Object> entityAttr =
+          existingService.getAnnotation(RooJavaType.ROO_SERVICE).getAttribute("entity");
+      if (entityAttr != null && entityAttr.getValue().equals(entity)) {
+        this.service = existingService.getType();
+      }
+    }
+
+    // Getting controller finders
+    final SearchAnnotationValues annotationValues =
+        new SearchAnnotationValues(governorPhysicalTypeMetadata);
+    List<String> finderNames = new ArrayList<String>();
+
+    // Add finders only if controller is of search type
+    if (this.type == ControllerType.getControllerType(ControllerType.SEARCH.name())
+        && annotationValues != null && annotationValues.getFinders() != null) {
+      finderNames = Arrays.asList(annotationValues.getFinders());
+    }
+
+    // Getting pathPrefix
+    AnnotationAttributeValue<Object> pathPrefixAttr =
+        controllerAnnotation.getAttribute("pathPrefix");
+    String pathPrefix = "";
+    if (pathPrefixAttr != null) {
+      pathPrefix = StringUtils.lowerCase((String) pathPrefixAttr.getValue());
+    }
+    // Generate path
+    String path =
+        "/".concat(StringUtils.lowerCase(Noun.pluralOf(entity.getSimpleTypeName(), Locale.ENGLISH)));
+    if (StringUtils.isNotEmpty(pathPrefix)) {
+      if (!pathPrefix.startsWith("/")) {
+        pathPrefix = "/".concat(pathPrefix);
+      }
+      path = pathPrefix.concat(path);
+    }
+    this.controllerPath = path;
 
     // Fill view context
     ViewContext ctx = new ViewContext();
@@ -166,6 +220,16 @@ public abstract class AbstractViewGeneratorMetadataProvider extends
       // If not readOnly, add update view
       viewGenerationService
           .addUpdateView(this.controller.getType().getModule(), entityDetails, ctx);
+    }
+
+    // Add finder views
+    if (finderNames != null) {
+      for (String finderName : finderNames) {
+        viewGenerationService.addFinderFormView(this.controller.getType().getModule(),
+            entityDetails, finderName, ctx);
+        viewGenerationService.addFinderListView(this.controller.getType().getModule(),
+            entityDetails, finderName, ctx);
+      }
     }
 
     // Update menu view every time that new controller has been modified
@@ -236,7 +300,7 @@ public abstract class AbstractViewGeneratorMetadataProvider extends
 
   /**
    * This method returns entity field included on controller
-   * 
+   *
    * @return
    */
   private FieldMetadata getEntityField() {

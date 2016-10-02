@@ -3,7 +3,7 @@ package org.springframework.roo.model;
 /**
  * Constants for Roo-specific {@link JavaType}s. Use them in preference to
  * creating new instances of these types.
- * 
+ *
  * @author Andrew Swan
  * @author Juan Carlos García
  * @since 1.2.0
@@ -67,8 +67,8 @@ public final class RooJavaType {
       "org.springframework.roo.addon.javabean.annotations.RooToString");
   public static final JavaType ROO_UPLOADED_FILE = new JavaType(
       "org.springframework.roo.classpath.operations.jsr303.RooUploadedFile");
-  public static final JavaType ROO_WEB_FINDER = new JavaType(
-      "org.springframework.roo.addon.web.mvc.controller.annotations.finder.RooWebFinder");
+  public static final JavaType ROO_SEARCH = new JavaType(
+      "org.springframework.roo.addon.web.mvc.controller.annotations.finder.RooSearch");
   public static final JavaType ROO_WEB_JSON = new JavaType(
       "org.springframework.roo.addon.web.mvc.controller.annotations.json.RooWebJson");
   public static final JavaType ROO_WEB_SCAFFOLD = new JavaType(
@@ -101,13 +101,14 @@ public final class RooJavaType {
       "org.springframework.roo.addon.test.annotations.RooUnitTest");
   public static final JavaType ROO_CONTROLLER = new JavaType(
       "org.springframework.roo.addon.web.mvc.controller.annotations.RooController");
+  public static final JavaType ROO_DETAIL = new JavaType(
+      "org.springframework.roo.addon.web.mvc.controller.annotations.RooDetail");
+
   public static final JavaType ROO_WEB_MVC_CONFIGURATION = new JavaType(
       "org.springframework.roo.addon.web.mvc.controller.annotations.config.RooWebMvcConfiguration");
   public static final JavaType ROO_WEB_MVC_JSON_CONFIGURATION =
       new JavaType(
           "org.springframework.roo.addon.web.mvc.controller.annotations.config.RooWebMvcJSONConfiguration");
-  public static final JavaType ROO_FORMATTER = new JavaType(
-      "org.springframework.roo.addon.web.mvc.controller.annotations.formatters.RooFormatter");
   public static final JavaType ROO_JSON = new JavaType(
       "org.springframework.roo.addon.web.mvc.controller.annotations.responses.json.RooJSON");
   public static final JavaType ROO_THYMELEAF = new JavaType(
@@ -159,6 +160,9 @@ public final class RooJavaType {
   public static final JavaType ROO_JSON_JSONP_ADVICE =
       new JavaType(
           "org.springframework.roo.addon.web.mvc.controller.annotations.http.converters.json.RooJSONJsonpAdvice");
+
+  public static final JavaType ROO_ENUM_CONTROLLER_TYPE = new JavaType(
+      "org.springframework.roo.addon.web.mvc.controller.annotations.ControllerType");
 
   /**
    * Constructor is private to prevent instantiation

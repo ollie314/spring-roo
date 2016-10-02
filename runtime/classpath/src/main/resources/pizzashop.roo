@@ -17,6 +17,11 @@ field number --fieldName price --type java.math.BigDecimal
 field set --fieldName toppings --type ~.domain.Topping
 field reference --fieldName base --type ~.domain.Base
 
+embeddable --class ~.domain.PizzaOrderPk
+field string --fieldName shopCountry
+field string --fieldName shopCity
+field string --fieldName shopName
+
 entity jpa --class ~.domain.PizzaOrder --testAutomatically --identifierType ~.domain.PizzaOrderPk
 field string --fieldName name --notNull --sizeMin 2
 field string --fieldName address --sizeMax 30
@@ -24,16 +29,11 @@ field number --fieldName total --type java.math.BigDecimal
 field date --fieldName deliveryDate --type java.util.Date
 field set --fieldName pizzas --type ~.domain.Pizza
 
-focus --class ~.domain.PizzaOrderPk
-field string --fieldName shopCountry
-field string --fieldName shopCity
-field string --fieldName shopName
-
 // Define a repository layer for persistence
 repository jpa --entity ~.domain.Topping --interface ~.repository.ToppingRepository
-repository jpa --entity ~.domain.Base --interface ~.repository.BaseRepository 
-repository jpa --entity ~.domain.Pizza --interface ~.repository.PizzaRepository 
-repository jpa --entity ~.domain.PizzaOrder --interface ~.repository.PizzaOrderRepository 
+repository jpa --entity ~.domain.Base --interface ~.repository.BaseRepository
+repository jpa --entity ~.domain.Pizza --interface ~.repository.PizzaRepository
+repository jpa --entity ~.domain.PizzaOrder --interface ~.repository.PizzaOrderRepository
 
 // Define a service/facade layer
 service --entity ~.domain.Topping --repository ~.repository.ToppingRepository --interface ~.service.ToppingService
@@ -47,7 +47,7 @@ service --entity ~.domain.PizzaOrder --repository ~.repository.PizzaOrderReposit
 //web mvc json all --package ~.web
 
 web mvc setup
-web mvc controller --all --package com.springsource.pizzashop.web --responseType JSON
+web mvc controller --all
 
 // Example scripts for JSON remoting:
 // curl -i -X POST -H "Content-Type: application/json" -H "Accept: application/json" -d '{name: "Thin Crust"}' http://localhost:8080/pizzashop/bases

@@ -2,27 +2,14 @@ package org.springframework.roo.addon.finder.addon;
 
 import static org.springframework.roo.model.RooJavaType.ROO_FINDERS;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.commons.lang3.Validate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.springframework.roo.addon.finder.addon.parser.FinderAutocomplete;
 import org.springframework.roo.addon.finder.addon.parser.FinderMethod;
 import org.springframework.roo.addon.finder.addon.parser.FinderParameter;
 import org.springframework.roo.addon.finder.addon.parser.PartTree;
-import org.springframework.roo.addon.finder.annotations.RooFinder;
 import org.springframework.roo.addon.finder.annotations.RooFinders;
 import org.springframework.roo.classpath.PhysicalTypeIdentifier;
 import org.springframework.roo.classpath.PhysicalTypeMetadata;
@@ -33,7 +20,6 @@ import org.springframework.roo.classpath.details.ItdTypeDetails;
 import org.springframework.roo.classpath.details.MemberHoldingTypeDetails;
 import org.springframework.roo.classpath.details.annotations.AnnotationAttributeValue;
 import org.springframework.roo.classpath.details.annotations.AnnotationMetadata;
-import org.springframework.roo.classpath.details.annotations.ArrayAttributeValue;
 import org.springframework.roo.classpath.details.annotations.NestedAnnotationAttributeValue;
 import org.springframework.roo.classpath.itd.AbstractMemberDiscoveringItdMetadataProvider;
 import org.springframework.roo.classpath.itd.ItdTypeDetailsProvidingMetadataItem;
@@ -46,6 +32,15 @@ import org.springframework.roo.model.JavaType;
 import org.springframework.roo.model.RooJavaType;
 import org.springframework.roo.project.LogicalPath;
 import org.springframework.roo.support.logging.HandlerUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implementation of {@link FinderMetadataProvider}.
@@ -213,40 +208,55 @@ public class FinderMetadataProviderImpl extends AbstractMemberDiscoveringItdMeta
 
           // Get finder return type
           JavaType returnType =
-              (JavaType) finderAnnotation.getValue().getAttribute("returnType").getValue();
+              (JavaType) finderAnnotation.getValue().getAttribute("defaultReturnType").getValue();
+          Validate.notNull(returnType, "@RooFinder must have a 'defaultReturnType' parameter.");
 
-          // Create FinderMethod
-          PartTree finder = new PartTree(finderName, entityMemberDetails, this, returnType);
+          // Get finder return type
+          JavaType formBean =
+              (JavaType) finderAnnotation.getValue().getAttribute("formBean").getValue();
+          Validate.notNull(formBean, "@RooFinder must have a 'formBean' parameter.");
 
-          Validate
-              .notNull(
-                  finder,
-                  String
-                      .format(
-                          "ERROR: '%s' is not a valid finder. Use autocomplete feature (TAB or CTRL + Space) to include finder that follows Spring Data nomenclature.",
-                          finderName));
+          // If defaultReturnType is a Projection or formBean is a DTO, finder creation 
+          // should be avoided here and let RepositoryJpaCustomMetadata create it on 
+          // RepositoryCustom classes.
+          if ((getTypeLocationService().getTypeDetails(returnType) != null && getTypeLocationService()
+              .getTypeDetails(returnType).getAnnotation(RooJavaType.ROO_ENTITY_PROJECTION) == null)
+              && (getTypeLocationService().getTypeDetails(formBean) != null && getTypeLocationService()
+                  .getTypeDetails(formBean).getAnnotation(RooJavaType.ROO_DTO) == null)) {
 
-          FinderMethod finderMethod =
-              new FinderMethod(finder.getReturnType(), new JavaSymbolName(finderName),
-                  finder.getParameters());
+            // Create FinderMethods
+            PartTree finder = new PartTree(finderName, entityMemberDetails, this, returnType);
 
-          // Add dependencies between modules
-          List<JavaType> types = new ArrayList<JavaType>();
-          types.add(finder.getReturnType());
-          types.addAll(finder.getReturnType().getParameters());
+            Validate
+                .notNull(
+                    finder,
+                    String
+                        .format(
+                            "ERROR: '%s' is not a valid finder. Use autocomplete feature (TAB or CTRL + Space) to include finder that follows Spring Data nomenclature.",
+                            finderName));
 
-          for (FinderParameter parameter : finder.getParameters()) {
-            types.add(parameter.getType());
-            types.addAll(parameter.getType().getParameters());
+            FinderMethod finderMethod =
+                new FinderMethod(finder.getReturnType(), new JavaSymbolName(finderName),
+                    finder.getParameters());
+
+            // Add dependencies between modules
+            List<JavaType> types = new ArrayList<JavaType>();
+            types.add(finder.getReturnType());
+            types.addAll(finder.getReturnType().getParameters());
+
+            for (FinderParameter parameter : finder.getParameters()) {
+              types.add(parameter.getType());
+              types.addAll(parameter.getType().getParameters());
+            }
+
+            for (JavaType parameter : types) {
+              getTypeLocationService().addModuleDependency(
+                  governorPhysicalTypeMetadata.getType().getModule(), parameter);
+            }
+
+            // Add to finder methods list
+            findersToAdd.add(finderMethod);
           }
-
-          for (JavaType parameter : types) {
-            getTypeLocationService().addModuleDependency(
-                governorPhysicalTypeMetadata.getType().getModule(), parameter);
-          }
-
-          // Add to finder methods list
-          findersToAdd.add(finderMethod);
         }
       }
     } else {
@@ -254,6 +264,9 @@ public class FinderMetadataProviderImpl extends AbstractMemberDiscoveringItdMeta
           "ERROR: You must include 'finders' attribute on @RooFinders annotation");
       return null;
     }
+
+    // Notify downstream dependencies for updating repository custom if necessary
+    getMetadataDependencyRegistry().notifyDownstream(metadataIdentificationString);
 
     return new FinderMetadata(metadataIdentificationString, aspectName,
         governorPhysicalTypeMetadata, findersToAdd);
