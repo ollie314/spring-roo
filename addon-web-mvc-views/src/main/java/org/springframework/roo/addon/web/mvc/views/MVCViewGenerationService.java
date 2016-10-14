@@ -140,6 +140,26 @@ public interface MVCViewGenerationService {
   void addIndexView(String moduleName, ViewContext ctx);
 
   /**
+   * This operation will add the login view using the provided
+   * context
+   * 
+   * @param moduleName module where index view will be added
+   * @param ctx ViewContext that contains necessary information about
+   *            the controller, the project, etc...
+   */
+  void addLoginView(String moduleName, ViewContext ctx);
+
+  /**
+   * This operation will add the application accessibility view using 
+   * the provided context
+   * 
+   * @param moduleName module where index view will be added
+   * @param ctx ViewContext that contains necessary information about
+   *            the controller, the project, etc...
+   */
+  void addAccessibilityView(String moduleName, ViewContext ctx);
+
+  /**
    * This operation will add the application error view using 
    * the provided context
    * 
@@ -158,6 +178,16 @@ public interface MVCViewGenerationService {
    *            the controller, the project, etc...
    */
   void addDefaultLayout(String moduleName, ViewContext ctx);
+
+  /**
+   * This operation will add the default-layout-no-menu view using 
+   * the provided context
+   * 
+   * @param moduleName module where default view will be added
+   * @param ctx ViewContext that contains necessary information about
+   *            the controller, the project, etc...
+   */
+  void addDefaultLayoutNoMenu(String moduleName, ViewContext ctx);
 
   /**
    * This operation will add the footer fragment using 

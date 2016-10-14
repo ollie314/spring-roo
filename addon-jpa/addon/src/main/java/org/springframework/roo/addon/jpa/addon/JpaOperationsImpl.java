@@ -8,7 +8,6 @@ import static org.springframework.roo.model.RooJavaType.ROO_JAVA_BEAN;
 import static org.springframework.roo.model.RooJavaType.ROO_SERIALIZABLE;
 import static org.springframework.roo.model.RooJavaType.ROO_TO_STRING;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.felix.scr.annotations.Component;
@@ -27,7 +26,6 @@ import org.springframework.roo.classpath.TypeManagementService;
 import org.springframework.roo.classpath.details.ClassOrInterfaceTypeDetails;
 import org.springframework.roo.classpath.details.ClassOrInterfaceTypeDetailsBuilder;
 import org.springframework.roo.classpath.details.annotations.AnnotationMetadataBuilder;
-import org.springframework.roo.model.JavaPackage;
 import org.springframework.roo.model.JavaType;
 import org.springframework.roo.model.JdkJavaType;
 import org.springframework.roo.model.RooJavaType;
@@ -37,16 +35,14 @@ import org.springframework.roo.project.FeatureNames;
 import org.springframework.roo.project.Path;
 import org.springframework.roo.project.PathResolver;
 import org.springframework.roo.project.ProjectOperations;
+import org.springframework.roo.project.Property;
 import org.springframework.roo.project.maven.Pom;
 import org.springframework.roo.support.logging.HandlerUtils;
-import org.springframework.roo.support.util.FileUtils;
 import org.springframework.roo.support.util.XmlUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,6 +81,9 @@ public class JpaOperationsImpl implements JpaOperations {
   private static final String DATABASE_URL = "url";
   private static final String DATABASE_USERNAME = "username";
   private static final String JNDI_NAME = "jndi-name";
+  private static final String HIBERNATE_NAMING_STRATEGY = "spring.jpa.hibernate.naming.strategy";
+  private static final String HIBERNATE_NAMING_STRATEGY_VALUE =
+      "org.hibernate.cfg.ImprovedNamingStrategy";
   static final String POM_XML = "pom.xml";
 
   private FileManager fileManager;
@@ -217,11 +216,6 @@ public class JpaOperationsImpl implements JpaOperations {
     cidBuilder.setAnnotations(annotations);
 
     getTypeManagementService().createOrUpdateTypeOnDisk(cidBuilder.build());
-
-    // Also, it is necessary to include a class annotated with @RooGlobalSearch.
-    // This Value Object is used to define global data searches in an entity or
-    // group of entities.
-    generateGlobalSearch(name.getPackage());
 
     // Add persistence dependencies to entity module if necessary
     // Don't need to add them if spring-boot-starter-data-jpa is present, often in single module project
@@ -449,6 +443,12 @@ public class JpaOperationsImpl implements JpaOperations {
           profile);
 
     }
+
+    // Add Hibernate naming strategy property
+    if (ormProvider.toString().equals(OrmProvider.HIBERNATE.toString())) {
+      applicationConfigService.addProperty(moduleName, HIBERNATE_NAMING_STRATEGY,
+          HIBERNATE_NAMING_STRATEGY_VALUE, profile, force);
+    }
   }
 
   /**
@@ -504,6 +504,16 @@ public class JpaOperationsImpl implements JpaOperations {
       requiredDependencies.add(new Dependency(dependencyElement));
     }
 
+    final List<Element> commonDependencies =
+        XmlUtils.findElements("/configuration/common/dependencies/dependency", configuration);
+    for (final Element dependencyElement : commonDependencies) {
+      requiredDependencies.add(new Dependency(dependencyElement));
+    }
+    // Add properties
+    List<Element> properties = XmlUtils.findElements("/configuration/properties/*", configuration);
+    for (Element property : properties) {
+      getProjectOperations().addProperty("", new Property(property));
+    }
     // Add dependencies used by other profiles, excluding the current profile
     List<String> profiles = applicationConfigService.getApplicationProfiles(module.getModuleName());
     profiles.remove(profile);
@@ -559,54 +569,6 @@ public class JpaOperationsImpl implements JpaOperations {
 
       }
     }
-  }
-
-  /**
-   * Method that generates GlobalSearch class on current model package. If
-   * GlobalSearch already exists in this or other package, will not be
-   * generated.
-   *
-   * @param modelPackage Package where GlobalSearch should be generated
-   * @return JavaType with existing or new GlobalSearch
-   */
-  private JavaType generateGlobalSearch(JavaPackage modelPackage) {
-
-    // First of all, check if already exists a @RooGlobalSearch
-    // class on current project
-    Set<JavaType> globalSearchClasses =
-        getTypeLocationService().findTypesWithAnnotation(RooJavaType.ROO_GLOBAL_SEARCH);
-
-    if (!globalSearchClasses.isEmpty()) {
-      Iterator<JavaType> it = globalSearchClasses.iterator();
-      while (it.hasNext()) {
-        return it.next();
-      }
-    }
-
-    final JavaType javaType =
-        new JavaType(String.format("%s.GlobalSearch", modelPackage), modelPackage.getModule());
-    final String physicalPath =
-        getPathResolver().getCanonicalPath(javaType.getModule(), Path.SRC_MAIN_JAVA, javaType);
-
-    // Including GlobalSearch class
-    InputStream inputStream = null;
-    try {
-      // Use defined template
-      inputStream = FileUtils.getInputStream(getClass(), "GlobalSearch-template._java");
-      String input = IOUtils.toString(inputStream);
-      // Replacing package
-      input = input.replace("__PACKAGE__", modelPackage.getFullyQualifiedPackageName());
-
-      // Creating GlobalSearch class
-      getFileManager().createOrUpdateTextFileIfRequired(physicalPath, input, false);
-    } catch (final IOException e) {
-      throw new IllegalStateException(String.format("Unable to create '%s'", physicalPath), e);
-    } finally {
-      IOUtils.closeQuietly(inputStream);
-    }
-
-    return javaType;
-
   }
 
   /**

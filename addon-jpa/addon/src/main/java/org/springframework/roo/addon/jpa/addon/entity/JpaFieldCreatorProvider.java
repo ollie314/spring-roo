@@ -5,25 +5,23 @@ import static org.springframework.roo.model.JdkJavaType.SET;
 import static org.springframework.roo.model.JpaJavaType.ENTITY;
 import static org.springframework.roo.model.SpringJavaType.PERSISTENT;
 
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.springframework.roo.addon.field.addon.FieldCreatorProvider;
+import org.springframework.roo.addon.plural.addon.PluralMetadata;
 import org.springframework.roo.classpath.PhysicalTypeCategory;
 import org.springframework.roo.classpath.PhysicalTypeDetails;
+import org.springframework.roo.classpath.PhysicalTypeIdentifier;
 import org.springframework.roo.classpath.PhysicalTypeMetadata;
 import org.springframework.roo.classpath.TypeLocationService;
 import org.springframework.roo.classpath.TypeManagementService;
 import org.springframework.roo.classpath.details.ClassOrInterfaceTypeDetails;
 import org.springframework.roo.classpath.details.FieldDetails;
+import org.springframework.roo.classpath.details.FieldMetadata;
 import org.springframework.roo.classpath.details.FieldMetadataBuilder;
 import org.springframework.roo.classpath.details.MemberHoldingTypeDetails;
 import org.springframework.roo.classpath.details.annotations.AnnotationMetadata;
@@ -57,23 +55,34 @@ import org.springframework.roo.model.JavaType;
 import org.springframework.roo.model.JdkJavaType;
 import org.springframework.roo.model.JpaJavaType;
 import org.springframework.roo.model.ReservedWords;
+import org.springframework.roo.model.RooEnumDetails;
 import org.springframework.roo.model.RooJavaType;
 import org.springframework.roo.project.LogicalPath;
 import org.springframework.roo.project.ProjectOperations;
 import org.springframework.roo.settings.project.ProjectSettingsService;
 import org.springframework.roo.shell.ShellContext;
-import org.springframework.roo.addon.field.addon.FieldCreatorProvider;
+import org.springframework.roo.support.logging.HandlerUtils;
+
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Provides field creation operations support for JPA entities by implementing
  * FieldCreatorProvider.
- * 
+ *
  * @author Sergio Clares
+ * @author Jose Manuel Vivó
  * @since 2.0
  */
 @Component
 @Service
 public class JpaFieldCreatorProvider implements FieldCreatorProvider {
+
+  private static final Logger LOGGER = HandlerUtils.getLogger(JpaFieldCreatorProvider.class);
 
   @Reference
   private TypeLocationService typeLocationService;
@@ -95,8 +104,6 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
 
   private static final String SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME =
       "spring.roo.jpa.require.schema-object-name";
-
-  public static final String ROO_DEFAULT_JOIN_TABLE_NAME = "_ROO_JOIN_TABLE_";
 
   @Override
   public boolean isValid(JavaType javaType) {
@@ -130,10 +137,15 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
     return true;
   }
 
+  @Override
+  public boolean isFieldCollectionAvailable() {
+    return true;
+  }
+
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -168,7 +180,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -208,7 +220,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -248,7 +260,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -288,7 +300,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -321,17 +333,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   }
 
   @Override
-  public boolean isCardinalityVisibleForFieldReference(ShellContext shellContext) {
-    return true;
-  }
-
-  @Override
   public boolean isFetchVisibleForFieldReference(ShellContext shellContext) {
-    return true;
-  }
-
-  @Override
-  public boolean isTransientVisibleForFieldReference(ShellContext shellContext) {
     return true;
   }
 
@@ -343,7 +345,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -371,7 +373,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -459,7 +461,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -512,7 +514,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -557,7 +559,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -587,7 +589,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   /**
    * ROO-3710: Indicator that checks if exists some project setting that makes
    * table column parameter mandatory.
-   * 
+   *
    * @param shellContext
    * @return true if exists property
    *         {@link #SPRING_ROO_JPA_REQUIRE_SCHEMA_OBJECT_NAME} on project
@@ -796,107 +798,245 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
   }
 
   @Override
-  public void createReferenceField(ClassOrInterfaceTypeDetails cid, Cardinality cardinality,
-      JavaType typeName, JavaType fieldType, JavaSymbolName fieldName, Cascade cascadeType,
-      boolean notNull, boolean nullRequired, String joinColumnName, String referencedColumnName,
-      Fetch fetch, String comment, boolean permitReservedWords, boolean transientModifier) {
+  public void createReferenceField(JavaType typeName, JavaType fieldType, JavaSymbolName fieldName,
+      boolean aggregation, JavaSymbolName mappedBy, Cascade[] cascadeType, boolean notNull,
+      String joinColumnName, String referencedColumnName, Fetch fetch, String comment,
+      boolean permitReservedWords, Boolean orphanRemoval, boolean isForce) {
+
+    final ClassOrInterfaceTypeDetails childCid = typeLocationService.getTypeDetails(fieldType);
+    final ClassOrInterfaceTypeDetails parentCid = typeLocationService.getTypeDetails(typeName);
+
+    Validate.notNull(parentCid, "The type specified, '%s', doesn't exist", typeName);
+    Validate
+        .notNull(
+            childCid,
+            "The specified target '--type' does not exist or can not be found. Please create this type first.",
+            fieldType);
+
+    // Check if parent field exist
+    checkFieldExists(fieldName, isForce, parentCid, "fieldName");
+
+
+    if (mappedBy == null) {
+      // generate mappedBy name from uncapitalized parentClass name
+      mappedBy = new JavaSymbolName(StringUtils.uncapitalize(typeName.getSimpleTypeName()));
+
+    }
+    // Check if child field exist
+    checkFieldExists(mappedBy, false, childCid, "mappedBy");
+
 
     // Check if the requested entity is a JPA @Entity
-    final MemberDetails memberDetails =
-        memberDetailsScanner.getMemberDetails(this.getClass().getName(), cid);
-    final AnnotationMetadata entityAnnotation = memberDetails.getAnnotation(ENTITY);
-    final AnnotationMetadata persistentAnnotation = memberDetails.getAnnotation(PERSISTENT);
+    final MemberDetails childMemberDetails =
+        memberDetailsScanner.getMemberDetails(this.getClass().getName(), childCid);
+    final AnnotationMetadata entityAnnotation = childMemberDetails.getAnnotation(ENTITY);
+    final AnnotationMetadata persistentAnnotation = childMemberDetails.getAnnotation(PERSISTENT);
     Validate
         .isTrue(
             entityAnnotation != null || persistentAnnotation != null,
             "The field reference command is only applicable to JPA @Entity or Spring Data @Persistent target types.");
 
-    Validate.isTrue(
-        cardinality == Cardinality.MANY_TO_ONE || cardinality == Cardinality.ONE_TO_ONE,
-        "Cardinality must be MANY_TO_ONE or ONE_TO_ONE for the field reference command");
 
-    final ClassOrInterfaceTypeDetails javaTypeDetails =
-        typeLocationService.getTypeDetails(typeName);
-    Validate.notNull(javaTypeDetails, "The type specified, '%s', doesn't exist", typeName);
+    // Prepare parent field
+    if (cascadeType == null) {
+      // prepare cascadType
+      if (aggregation) {
+        cascadeType = Cascade.MERGE_PERSIST;
+      } else {
+        // Compsition
+        cascadeType = Cascade.ALL_ARRAY;
+      }
+    }
 
-    final String physicalTypeIdentifier = javaTypeDetails.getDeclaredByMetadataId();
-    final ReferenceField fieldDetails =
-        new ReferenceField(physicalTypeIdentifier, fieldType, fieldName, cardinality, cascadeType);
-    fieldDetails.setNotNull(notNull);
-    fieldDetails.setNullRequired(nullRequired);
-    if (joinColumnName != null) {
-      fieldDetails.setJoinColumnName(joinColumnName);
+    if (fetch == null) {
+      fetch = Fetch.LAZY;
     }
-    if (referencedColumnName != null) {
-      Validate.notNull(joinColumnName,
-          "@JoinColumn name is required if specifying a referencedColumnName");
-      fieldDetails.setReferencedColumnName(referencedColumnName);
+
+    final ReferenceField parentFieldDetails =
+        new ReferenceField(parentCid.getDeclaredByMetadataId(), fieldType, fieldName,
+            Cardinality.ONE_TO_ONE, cascadeType);
+    parentFieldDetails.setFetch(fetch);
+
+    AnnotationMetadataBuilder rooJpaRelationAnnotation =
+        new AnnotationMetadataBuilder(RooJavaType.ROO_JPA_RELATION);
+    if (aggregation) {
+      rooJpaRelationAnnotation.addEnumAttribute("type", RooEnumDetails.RELATION_TYPE_AGGREGATION);
+    } else {
+      rooJpaRelationAnnotation.addEnumAttribute("type", RooEnumDetails.RELATION_TYPE_COMPOSITION);
     }
-    if (fetch != null) {
-      fieldDetails.setFetch(fetch);
-    }
+    parentFieldDetails.addAdditionaAnnotation(rooJpaRelationAnnotation);
+
     if (comment != null) {
-      fieldDetails.setComment(comment);
+      parentFieldDetails.setComment(comment);
     }
+    if (orphanRemoval == null && !aggregation) {
+      // composition
+      orphanRemoval = true;
+    }
+    parentFieldDetails.setOrphanRemoval(orphanRemoval);
 
-    insertField(fieldDetails, permitReservedWords, transientModifier);
+    parentFieldDetails.setMappedBy(mappedBy);
+
+    // Prepare child files
+    final ReferenceField childFieldDetails =
+        new ReferenceField(childCid.getDeclaredByMetadataId(), typeName, mappedBy,
+            Cardinality.ONE_TO_ONE, null);
+    childFieldDetails.setFetch(fetch);
+    if (joinColumnName != null) {
+      if (referencedColumnName != null) {
+        Validate.notNull(joinColumnName,
+            "@JoinColumn name is required if specifying a referencedColumnName");
+        childFieldDetails.setJoinColumn(joinColumnName, referencedColumnName);
+      } else {
+        childFieldDetails.setJoinColumn(joinColumnName);
+      }
+    }
+    childFieldDetails.setNotNull(notNull);
+
+    // insert child field
+    insertField(childFieldDetails, permitReservedWords, false);
+
+    // insert parent field
+    insertField(parentFieldDetails, permitReservedWords, false);
   }
 
   @Override
-  public void createSetField(ClassOrInterfaceTypeDetails cid, Cardinality cardinality,
-      JavaType typeName, JavaType fieldType, JavaSymbolName fieldName, Cascade cascadeType,
-      boolean notNull, boolean nullRequired, Integer sizeMin, Integer sizeMax,
-      JavaSymbolName mappedBy, Fetch fetch, String comment, String joinTable, String joinColumns,
-      String referencedColumns, String inverseJoinColumns, String inverseReferencedColumns,
-      boolean permitReservedWords, boolean transientModifier) {
+  public void createSetField(JavaType typeName, JavaType fieldType, JavaSymbolName fieldName,
+      Cardinality cardinality, Cascade[] cascadeType, boolean notNull, Integer sizeMin,
+      Integer sizeMax, JavaSymbolName mappedBy, Fetch fetch, String comment, String joinTable,
+      String joinColumns, String referencedColumns, String inverseJoinColumns,
+      String inverseReferencedColumns, boolean permitReservedWords, Boolean aggregation,
+      Boolean orphanRemoval, boolean isForce) {
+
+    createCollectionField(typeName, fieldType, fieldName, cardinality, cascadeType, notNull,
+        sizeMin, sizeMax, mappedBy, fetch, comment, joinTable, joinColumns, referencedColumns,
+        inverseJoinColumns, inverseReferencedColumns, permitReservedWords, aggregation,
+        orphanRemoval, isForce, false);
+  }
+
+  /**
+   * Implementation for {@link #createSetField(JavaType, JavaType, JavaSymbolName, Cardinality, Cascade[], boolean, Integer, Integer, JavaSymbolName, Fetch, String, String, String, String, String, String, boolean, Boolean, Boolean, boolean)}
+   * and
+   * {@link #createListField(ClassOrInterfaceTypeDetails, Cardinality, JavaType, JavaType, JavaSymbolName, Cascade, boolean, boolean, Integer, Integer, JavaSymbolName, Fetch, String, String, String, String, String, String, boolean, boolean)}
+   *
+   * @param isList true generates List, flase generates Set
+   */
+  public void createCollectionField(JavaType typeName, JavaType fieldType,
+      JavaSymbolName fieldName, Cardinality cardinality, Cascade[] cascadeType, boolean notNull,
+      Integer sizeMin, Integer sizeMax, JavaSymbolName mappedBy, Fetch fetch, String comment,
+      String joinTable, String joinColumns, String referencedColumns, String inverseJoinColumns,
+      String inverseReferencedColumns, boolean permitReservedWords, Boolean aggregation,
+      Boolean orphanRemoval, boolean isForce, boolean isList) {
+
+
+    final ClassOrInterfaceTypeDetails childCid = typeLocationService.getTypeDetails(fieldType);
+    final ClassOrInterfaceTypeDetails parentCid = typeLocationService.getTypeDetails(typeName);
+
+    Validate.notNull(parentCid, "The type specified, '%s', doesn't exist", typeName);
+    Validate
+        .notNull(
+            childCid,
+            "The specified target '--type' does not exist or can not be found. Please create this type first.",
+            fieldType);
+
+    // Check if parent field exist
+    checkFieldExists(fieldName, isForce, parentCid, "fieldName");
+
 
     // Check if the requested entity is a JPA @Entity
-    final MemberDetails memberDetails =
-        memberDetailsScanner.getMemberDetails(this.getClass().getName(), cid);
-    final AnnotationMetadata entityAnnotation = memberDetails.getAnnotation(ENTITY);
-    final AnnotationMetadata persistentAnnotation = memberDetails.getAnnotation(PERSISTENT);
+    final MemberDetails childMemberDetails =
+        memberDetailsScanner.getMemberDetails(this.getClass().getName(), childCid);
+    final AnnotationMetadata entityAnnotation = childMemberDetails.getAnnotation(ENTITY);
+    final AnnotationMetadata persistentAnnotation = childMemberDetails.getAnnotation(PERSISTENT);
 
-    if (entityAnnotation != null) {
-      Validate.isTrue(cardinality == Cardinality.ONE_TO_MANY
-          || cardinality == Cardinality.MANY_TO_MANY,
-          "Cardinality must be ONE_TO_MANY or MANY_TO_MANY for the field set command");
-    } else if (cid.getPhysicalTypeCategory() == PhysicalTypeCategory.ENUMERATION) {
-      cardinality = null;
-    } else if (persistentAnnotation != null) {
-      // Yes, we can deal with that
+    boolean isEnumeration = false;
+    if (childCid.getPhysicalTypeCategory() == PhysicalTypeCategory.ENUMERATION) {
+      isEnumeration = true;
+    } else if (entityAnnotation != null || persistentAnnotation != null) {
+      // Target is JPA entity
     } else {
       throw new IllegalStateException(
           "The field set command is only applicable to enum, JPA @Entity or Spring Data @Persistence elements");
     }
 
-    final ClassOrInterfaceTypeDetails javaTypeDetails =
-        typeLocationService.getTypeDetails(typeName);
-    Validate.notNull(javaTypeDetails, "The type specified, '%s', doesn't exist", typeName);
+    if (isEnumeration) {
+      // Enumeration
+      createCollectionEnumeration(parentCid, fieldType, fieldName, permitReservedWords, sizeMin,
+          sizeMax, comment, notNull, false);
+    } else {
+      // JPA
 
-    final String physicalTypeIdentifier = javaTypeDetails.getDeclaredByMetadataId();
-    final SetField fieldDetails =
-        new SetField(physicalTypeIdentifier, new JavaType(SET.getFullyQualifiedTypeName(), 0,
-            DataType.TYPE, null, Arrays.asList(fieldType)), fieldName, fieldType, cardinality,
-            cascadeType, false);
-    fieldDetails.setNotNull(notNull);
-    fieldDetails.setNullRequired(nullRequired);
-    if (sizeMin != null) {
-      fieldDetails.setSizeMin(sizeMin);
-    }
-    if (sizeMax != null) {
-      fieldDetails.setSizeMax(sizeMax);
-    }
-    if (mappedBy != null) {
-      fieldDetails.setMappedBy(mappedBy);
-    }
-    if (fetch != null) {
-      fieldDetails.setFetch(fetch);
-    }
-    if (comment != null) {
-      fieldDetails.setComment(comment);
-    }
-    if (joinTable != null) {
+      if (mappedBy == null) {
+        // generate mappedBy name from uncapitalized parentClass name
+        if (cardinality == Cardinality.MANY_TO_MANY) {
+          // Get plural
+          mappedBy = new JavaSymbolName(StringUtils.uncapitalize(getPlural(parentCid)));
+        } else {
+          mappedBy =
+              new JavaSymbolName(StringUtils.uncapitalize(parentCid.getType().getSimpleTypeName()));
+        }
+      }
+      if (fetch == null) {
+        fetch = Fetch.LAZY;
+      }
 
+      switch (cardinality) {
+        case ONE_TO_MANY:
+          createParentFieldOfToManyRelation(parentCid, childCid, fieldName, fieldType,
+              Cardinality.ONE_TO_MANY, permitReservedWords, sizeMin, sizeMax, comment, notNull,
+              mappedBy, fetch, aggregation, orphanRemoval, cascadeType, false);
+
+          createChildFieldOfOneToManyRelation(childCid, typeName, permitReservedWords, mappedBy,
+              fetch, joinTable, joinColumns, referencedColumns, inverseJoinColumns,
+              inverseReferencedColumns);
+          break;
+        case MANY_TO_MANY:
+          createParentFieldOfToManyRelation(parentCid, childCid, fieldName, fieldType,
+              Cardinality.MANY_TO_MANY, permitReservedWords, sizeMin, sizeMax, comment, notNull,
+              mappedBy, fetch, aggregation, orphanRemoval, cascadeType, false);
+
+          createChildFieldOfManyToManyRelation(childCid, typeName, permitReservedWords, mappedBy,
+              fetch, joinTable, joinColumns, referencedColumns, inverseJoinColumns,
+              inverseReferencedColumns, false);
+
+          break;
+
+        default:
+          throw new IllegalArgumentException(
+              "Cardinality must be ONE_TO_MANY or MANY_TO_MANY for the field set command");
+      }
+    }
+  }
+
+
+  /**
+   * Create child field of an OneToMany relation
+   *
+   * @param childCid
+   * @param parentType
+   * @param permitReservedWords
+   * @param mappedBy
+   * @param fetch
+   * @param joinTable
+   * @param joinColumns
+   * @param referencedColumns
+   * @param inverseJoinColumns
+   * @param inverseReferencedColumns
+   */
+  private void createChildFieldOfOneToManyRelation(ClassOrInterfaceTypeDetails childCid,
+      JavaType parentType, boolean permitReservedWords, JavaSymbolName mappedBy, Fetch fetch,
+      String joinTable, String joinColumns, String referencedColumns, String inverseJoinColumns,
+      String inverseReferencedColumns) {
+    final ReferenceField childFieldDetails =
+        new ReferenceField(childCid.getDeclaredByMetadataId(), parentType, mappedBy,
+            Cardinality.MANY_TO_ONE, null);
+    childFieldDetails.setFetch(fetch);
+
+    if (StringUtils.isNotBlank(joinTable) || StringUtils.isNotBlank(inverseJoinColumns)
+        || StringUtils.isNotBlank(joinColumns)) {
+      if (StringUtils.isNotBlank(inverseJoinColumns)) {
+
+      }
       // Create strings arrays and set @JoinTable annotation
       String[] joinColumnsArray = null;
       String[] referencedColumnsArray = null;
@@ -926,69 +1066,54 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
                 "--inverseJoinColumns and --inverseReferencedColumns must have same number of column values");
       }
 
-      fieldDetails.setJoinTableAnnotation(joinTable, joinColumnsArray, referencedColumnsArray,
+      // JoinTable set
+      childFieldDetails.setJoinAnnotations(joinTable, joinColumnsArray, referencedColumnsArray,
           inverseJoinColumnsArray, inverseReferencedColumnsArray);
     }
 
-    insertField(fieldDetails, permitReservedWords, transientModifier);
+    insertField(childFieldDetails, permitReservedWords, false);
   }
 
-  @Override
-  public void createListField(ClassOrInterfaceTypeDetails cid, Cardinality cardinality,
-      JavaType typeName, JavaType fieldType, JavaSymbolName fieldName, Cascade cascadeType,
-      boolean notNull, boolean nullRequired, Integer sizeMin, Integer sizeMax,
-      JavaSymbolName mappedBy, Fetch fetch, String comment, String joinTable, String joinColumns,
-      String referencedColumns, String inverseJoinColumns, String inverseReferencedColumns,
-      boolean permitReservedWords, boolean transientModifier) {
+  /**
+   * Create child field of a ManyToMany relation
+   *
+   * @param childCid
+   * @param parentType
+   * @param permitReservedWords
+   * @param mappedBy
+   * @param fetch
+   * @param joinTable
+   * @param joinColumns
+   * @param referencedColumns
+   * @param inverseJoinColumns
+   * @param inverseReferencedColumns
+   * @param isList
+   */
+  private void createChildFieldOfManyToManyRelation(ClassOrInterfaceTypeDetails childCid,
+      JavaType parentType, boolean permitReservedWords, JavaSymbolName mappedBy, Fetch fetch,
+      String joinTable, String joinColumns, String referencedColumns, String inverseJoinColumns,
+      String inverseReferencedColumns, boolean isList) {
 
-    // Check if the requested entity is a JPA @Entity
-    final MemberDetails memberDetails =
-        memberDetailsScanner.getMemberDetails(this.getClass().getName(), cid);
-    final AnnotationMetadata entityAnnotation = memberDetails.getAnnotation(ENTITY);
-    final AnnotationMetadata persistentAnnotation = memberDetails.getAnnotation(PERSISTENT);
-
-    if (entityAnnotation != null) {
-      Validate.isTrue(cardinality == Cardinality.ONE_TO_MANY
-          || cardinality == Cardinality.MANY_TO_MANY,
-          "Cardinality must be ONE_TO_MANY or MANY_TO_MANY for the field list command");
-    } else if (cid.getPhysicalTypeCategory() == PhysicalTypeCategory.ENUMERATION) {
-      cardinality = null;
-    } else if (persistentAnnotation != null) {
-      // Yes, we can deal with that
+    SetField childFieldDetails;
+    if (isList) {
+      childFieldDetails =
+          new ListField(childCid.getDeclaredByMetadataId(), new JavaType(
+              LIST.getFullyQualifiedTypeName(), 0, DataType.TYPE, null, Arrays.asList(parentType)),
+              mappedBy, parentType, Cardinality.MANY_TO_MANY, null, false);
     } else {
-      throw new IllegalStateException(
-          "The field list command is only applicable to enum, JPA @Entity or Spring "
-              + "Data @Persistence elements");
+      childFieldDetails =
+          new SetField(childCid.getDeclaredByMetadataId(), new JavaType(
+              SET.getFullyQualifiedTypeName(), 0, DataType.TYPE, null, Arrays.asList(parentType)),
+              mappedBy, parentType, Cardinality.MANY_TO_MANY, null, false);
     }
+    childFieldDetails.setFetch(fetch);
 
-    final ClassOrInterfaceTypeDetails javaTypeDetails =
-        typeLocationService.getTypeDetails(typeName);
-    Validate.notNull(javaTypeDetails, "The type specified, '%s' doesn't exist", typeName);
 
-    final String physicalTypeIdentifier = javaTypeDetails.getDeclaredByMetadataId();
-    final ListField fieldDetails =
-        new ListField(physicalTypeIdentifier, new JavaType(LIST.getFullyQualifiedTypeName(), 0,
-            DataType.TYPE, null, Arrays.asList(fieldType)), fieldName, fieldType, cardinality,
-            cascadeType, false);
-    fieldDetails.setNotNull(notNull);
-    fieldDetails.setNullRequired(nullRequired);
-    if (sizeMin != null) {
-      fieldDetails.setSizeMin(sizeMin);
-    }
-    if (sizeMax != null) {
-      fieldDetails.setSizeMax(sizeMax);
-    }
-    if (mappedBy != null) {
-      fieldDetails.setMappedBy(mappedBy);
-    }
-    if (fetch != null) {
-      fieldDetails.setFetch(fetch);
-    }
-    if (comment != null) {
-      fieldDetails.setComment(comment);
-    }
-    if (joinTable != null) {
+    if (StringUtils.isNotBlank(joinTable) || StringUtils.isNotBlank(inverseJoinColumns)
+        || StringUtils.isNotBlank(joinColumns)) {
+      if (StringUtils.isNotBlank(inverseJoinColumns)) {
 
+      }
       // Create strings arrays and set @JoinTable annotation
       String[] joinColumnsArray = null;
       String[] referencedColumnsArray = null;
@@ -1013,17 +1138,160 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
             "--joinColumns and --referencedColumns must have same number of column values");
       }
       if (inverseJoinColumnsArray != null && inverseReferencedColumnsArray != null) {
-        Validate.isTrue(inverseJoinColumnsArray.length == inverseReferencedColumnsArray.length,
-            "--inverseJoinColumns and --inverseReferencedColumns must have same "
-                + "number of column values");
+        Validate
+            .isTrue(inverseJoinColumnsArray.length == inverseReferencedColumnsArray.length,
+                "--inverseJoinColumns and --inverseReferencedColumns must have same number of column values");
       }
 
-      fieldDetails.setJoinTableAnnotation(joinTable, joinColumnsArray, referencedColumnsArray,
+      // JoinTable set
+      childFieldDetails.setJoinAnnotations(joinTable, joinColumnsArray, referencedColumnsArray,
           inverseJoinColumnsArray, inverseReferencedColumnsArray);
     }
 
-    insertField(fieldDetails, permitReservedWords, transientModifier);
+    insertField(childFieldDetails, permitReservedWords, false);
   }
+
+
+  /**
+   * Create parent field of a *ToMany relation
+   *
+   * @param parentCid
+   * @param childCid
+   * @param fieldName
+   * @param fieldType
+   * @param cardinality
+   * @param permitReservedWords
+   * @param sizeMin
+   * @param sizeMax
+   * @param comment
+   * @param notNull
+   * @param mappedBy
+   * @param fetch
+   * @param aggregation
+   * @param orphanRemoval
+   * @param cascadeType
+   * @param isList
+   */
+  private void createParentFieldOfToManyRelation(ClassOrInterfaceTypeDetails parentCid,
+      ClassOrInterfaceTypeDetails childCid, JavaSymbolName fieldName, JavaType fieldType,
+      Cardinality cardinality, boolean permitReservedWords, Integer sizeMin, Integer sizeMax,
+      String comment, boolean notNull, JavaSymbolName mappedBy, Fetch fetch, Boolean aggregation,
+      Boolean orphanRemoval, Cascade[] cascadeType, boolean isList) {
+    if (cascadeType == null) {
+      // prepare cascadType
+      if (aggregation) {
+        cascadeType = Cascade.MERGE_PERSIST;
+      } else {
+        // Compsition
+        cascadeType = Cascade.ALL_ARRAY;
+      }
+    }
+
+    // Check if child field exist
+    checkFieldExists(mappedBy, false, childCid, "mappedBy");
+    SetField parentFieldDetails;
+    if (isList) {
+      parentFieldDetails =
+          new ListField(parentCid.getDeclaredByMetadataId(), new JavaType(
+              LIST.getFullyQualifiedTypeName(), 0, DataType.TYPE, null, Arrays.asList(fieldType)),
+              fieldName, fieldType, Cardinality.ONE_TO_MANY, cascadeType, false);
+
+    } else {
+      parentFieldDetails =
+          new SetField(parentCid.getDeclaredByMetadataId(), new JavaType(
+              SET.getFullyQualifiedTypeName(), 0, DataType.TYPE, null, Arrays.asList(fieldType)),
+              fieldName, fieldType, cardinality, cascadeType, false);
+    }
+    parentFieldDetails.setNotNull(notNull);
+    if (comment != null) {
+      parentFieldDetails.setComment(comment);
+    }
+    if (sizeMin != null) {
+      parentFieldDetails.setSizeMin(sizeMin);
+    }
+    if (sizeMax != null) {
+      parentFieldDetails.setSizeMax(sizeMax);
+    }
+    parentFieldDetails.setMappedBy(mappedBy);
+    parentFieldDetails.setFetch(fetch);
+    if (orphanRemoval == null) {
+      if (aggregation) {
+        orphanRemoval = false;
+      } else {
+        orphanRemoval = true;
+      }
+    }
+
+    AnnotationMetadataBuilder rooJpaRelationAnnotation =
+        new AnnotationMetadataBuilder(RooJavaType.ROO_JPA_RELATION);
+    if (aggregation) {
+      rooJpaRelationAnnotation.addEnumAttribute("type", RooEnumDetails.RELATION_TYPE_AGGREGATION);
+    } else {
+      rooJpaRelationAnnotation.addEnumAttribute("type", RooEnumDetails.RELATION_TYPE_COMPOSITION);
+    }
+    parentFieldDetails.addAdditionaAnnotation(rooJpaRelationAnnotation);
+
+    // insert parent field
+    insertField(parentFieldDetails, permitReservedWords, false);
+  }
+
+  /**
+   * Create a field for a List or Set of a enumeration
+   *
+   * @param parentCid
+   * @param fieldType
+   * @param fieldName
+   * @param permitReservedWords
+   * @param sizeMin
+   * @param sizeMax
+   * @param comment
+   * @param notNull
+   * @param isList
+   */
+  private void createCollectionEnumeration(final ClassOrInterfaceTypeDetails parentCid,
+      JavaType fieldType, JavaSymbolName fieldName, boolean permitReservedWords, Integer sizeMin,
+      Integer sizeMax, String comment, boolean notNull, boolean isList) {
+
+    SetField parentFieldDetails;
+    if (isList) {
+      parentFieldDetails =
+          new SetField(parentCid.getDeclaredByMetadataId(), new JavaType(
+              LIST.getFullyQualifiedTypeName(), 0, DataType.TYPE, null, Arrays.asList(fieldType)),
+              fieldName, fieldType, null, null, false);
+    } else {
+      parentFieldDetails =
+          new ListField(parentCid.getDeclaredByMetadataId(), new JavaType(
+              SET.getFullyQualifiedTypeName(), 0, DataType.TYPE, null, Arrays.asList(fieldType)),
+              fieldName, fieldType, null, null, false);
+    }
+    parentFieldDetails.setNotNull(notNull);
+    if (comment != null) {
+      parentFieldDetails.setComment(comment);
+    }
+    if (sizeMin != null) {
+      parentFieldDetails.setSizeMin(sizeMin);
+    }
+    if (sizeMax != null) {
+      parentFieldDetails.setSizeMax(sizeMax);
+    }
+    // Handle enumeration Set
+    insertField(parentFieldDetails, permitReservedWords, false);
+  }
+
+  @Override
+  public void createListField(JavaType typeName, JavaType fieldType, JavaSymbolName fieldName,
+      Cardinality cardinality, Cascade[] cascadeType, boolean notNull, Integer sizeMin,
+      Integer sizeMax, JavaSymbolName mappedBy, Fetch fetch, String comment, String joinTable,
+      String joinColumns, String referencedColumns, String inverseJoinColumns,
+      String inverseReferencedColumns, boolean permitReservedWords, Boolean aggregation,
+      Boolean orphanRemoval, boolean isForce) {
+
+    createCollectionField(typeName, fieldType, fieldName, cardinality, cascadeType, notNull,
+        sizeMin, sizeMax, mappedBy, fetch, comment, joinTable, joinColumns, referencedColumns,
+        inverseJoinColumns, inverseReferencedColumns, permitReservedWords, aggregation,
+        orphanRemoval, isForce, false);
+  };
+
 
   @Override
   public void createStringField(ClassOrInterfaceTypeDetails cid, JavaSymbolName fieldName,
@@ -1115,10 +1383,16 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
     insertField(fieldDetails, permitReservedWords, transientModifier);
   }
 
-  public void insertField(final FieldDetails fieldDetails, final boolean permitReservedWords,
-      final boolean transientModifier) {
-
-    String module = null;
+  /**
+   * Generates Field builder based on fieldDetails
+   *
+   * @param fieldDetails
+   * @param permitReservedWords
+   * @param transientModifier
+   * @return
+   */
+  private FieldMetadataBuilder generateFieldBuilder(final FieldDetails fieldDetails,
+      final boolean permitReservedWords, final boolean transientModifier) {
     if (!permitReservedWords) {
       ReservedWords.verifyReservedWordsNotPresent(fieldDetails.getFieldName());
       if (fieldDetails.getColumn() != null) {
@@ -1130,14 +1404,9 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
     fieldDetails.decorateAnnotationsList(annotations);
     fieldDetails.setAnnotations(annotations);
 
-    if (fieldDetails.getFieldType() != null) {
-      module = fieldDetails.getFieldType().getModule();
-    }
-
     String initializer = null;
     if (fieldDetails instanceof CollectionField) {
       final CollectionField collectionField = (CollectionField) fieldDetails;
-      module = collectionField.getGenericParameterTypeName().getModule();
       initializer = "new " + collectionField.getInitializer() + "()";
     } else if (fieldDetails instanceof DateField
         && fieldDetails.getFieldName().getSymbolName().equals("created")) {
@@ -1154,6 +1423,28 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
 
     final FieldMetadataBuilder fieldBuilder = new FieldMetadataBuilder(fieldDetails);
     fieldBuilder.setFieldInitializer(initializer);
+    return fieldBuilder;
+  }
+
+  private String getFieldModule(final FieldDetails fieldDetails) {
+    String module = null;
+    if (fieldDetails.getFieldType() != null) {
+      module = fieldDetails.getFieldType().getModule();
+    }
+    if (fieldDetails instanceof CollectionField) {
+      final CollectionField collectionField = (CollectionField) fieldDetails;
+      module = collectionField.getGenericParameterTypeName().getModule();
+    }
+    return module;
+  }
+
+  public void insertField(final FieldDetails fieldDetails, final boolean permitReservedWords,
+      final boolean transientModifier) {
+
+    String module = getFieldModule(fieldDetails);
+
+    final FieldMetadataBuilder fieldBuilder =
+        generateFieldBuilder(fieldDetails, permitReservedWords, transientModifier);
     typeManagementService.addField(fieldBuilder.build());
 
     if (module != null) {
@@ -1280,7 +1571,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
 
   /**
    * Replaces a JavaType fullyQualifiedName for a shorter name using '~' for TopLevelPackage
-   * 
+   *
    * @param cid ClassOrInterfaceTypeDetails of a JavaType
    * @param currentText String current text for option value
    * @return the String representing a JavaType with its name shortened
@@ -1323,7 +1614,7 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
     if ((StringUtils.isBlank(currentText) || auxString.startsWith(currentText))
         && StringUtils.contains(javaTypeFullyQualilfiedName, topLevelPackageString)) {
 
-      // Value is for autocomplete only or user wrote abbreviate value  
+      // Value is for autocomplete only or user wrote abbreviate value
       javaTypeString = auxString;
     } else {
 
@@ -1332,5 +1623,55 @@ public class JpaFieldCreatorProvider implements FieldCreatorProvider {
     }
 
     return javaTypeString;
+  }
+
+  /**
+   * Checks if entity has already a field with the same name and throws an exception
+   * in that case.
+   *
+   * @param fieldName
+   * @param isforce
+   * @param javaTypeDetails
+   * @param parameterName
+   */
+  private void checkFieldExists(final JavaSymbolName fieldName, final boolean isForce,
+      final ClassOrInterfaceTypeDetails javaTypeDetails, final String parameterName) {
+    MemberDetails memberDetails =
+        memberDetailsScanner.getMemberDetails(this.getClass().getName(), javaTypeDetails);
+    List<FieldMetadata> fields = memberDetails.getFields();
+    for (FieldMetadata field : fields) {
+      if (field.getFieldName().equals(fieldName) && !isForce) {
+        throw new IllegalArgumentException(
+            String
+                .format(
+                    "Field '%s' already exists and cannot be created. Try to use a "
+                        + "different field name on --%s parameter or use --force parameter to overwrite it.",
+                    fieldName, parameterName));
+      }
+    }
+  }
+
+  /**
+   * Gets plural of a class based on its {@link PluralMetadata} (if any).
+   *
+   * If there isn't {@link PluralMetadata}, just add an _s_
+   *
+   * @param cid
+   * @return plural
+   */
+  private String getPlural(ClassOrInterfaceTypeDetails cid) {
+    final JavaType javaType = cid.getType();
+    final LogicalPath logicalPath = PhysicalTypeIdentifier.getPath(cid.getDeclaredByMetadataId());
+    final String pluralMetadataKey = PluralMetadata.createIdentifier(javaType, logicalPath);
+    final PluralMetadata pluralMetadata = (PluralMetadata) metadataService.get(pluralMetadataKey);
+    if (pluralMetadata != null) {
+      final String plural = pluralMetadata.getPlural();
+      if (plural.equalsIgnoreCase(javaType.getSimpleTypeName())) {
+        return plural + "Items";
+      } else {
+        return plural;
+      }
+    }
+    return javaType.getSimpleTypeName() + "s";
   }
 }

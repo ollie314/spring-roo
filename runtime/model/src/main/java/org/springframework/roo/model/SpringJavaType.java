@@ -14,14 +14,22 @@ import org.apache.commons.lang3.Validate;
 public final class SpringJavaType {
 
   // org.springframework
+  public static final JavaType ASSERT = new JavaType("org.springframework.util.Assert");
   public static final JavaType ASYNC = new JavaType(
       "org.springframework.scheduling.annotation.Async");
   public static final JavaType AUDITING_ENTITY_LISTENER = new JavaType(
       "org.springframework.data.jpa.domain.support.AuditingEntityListener");
   public static final JavaType AUTHENTICATION = new JavaType(
       "org.springframework.security.core.Authentication");
+  public static final JavaType AUTHENTICATION_EVENT_PUBLISHER = new JavaType(
+      "org.springframework.security.authentication.AuthenticationEventPublisher");
+  public static final JavaType AUTHENTICATION_MANAGER_BUILDER =
+      new JavaType(
+          "org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder");
   public static final JavaType AUTOWIRED = new JavaType(
       "org.springframework.beans.factory.annotation.Autowired");
+  public static final JavaType BCRYPT_PASSWORD_ENCODER = new JavaType(
+      "org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder");
   public static final JavaType BINDING_RESULT = new JavaType(
       "org.springframework.validation.BindingResult");
   public static final JavaType BEAN = new JavaType("org.springframework.context.annotation.Bean");

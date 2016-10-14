@@ -8,16 +8,15 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
-import org.springframework.roo.addon.web.mvc.controller.addon.finder.SearchAnnotationValues;
 import org.springframework.roo.addon.web.mvc.i18n.I18nOperations;
 import org.springframework.roo.addon.web.mvc.i18n.I18nOperationsImpl;
 import org.springframework.roo.addon.web.mvc.i18n.components.I18n;
+import org.springframework.roo.addon.web.mvc.views.components.DetailEntityItem;
+import org.springframework.roo.addon.web.mvc.views.components.EntityItem;
 import org.springframework.roo.addon.web.mvc.views.components.FieldItem;
 import org.springframework.roo.addon.web.mvc.views.components.FieldTypes;
 import org.springframework.roo.addon.web.mvc.views.components.MenuEntry;
 import org.springframework.roo.classpath.PhysicalTypeCategory;
-import org.springframework.roo.classpath.PhysicalTypeIdentifierNamingUtils;
-import org.springframework.roo.classpath.PhysicalTypeMetadata;
 import org.springframework.roo.classpath.TypeLocationService;
 import org.springframework.roo.classpath.details.ClassOrInterfaceTypeDetails;
 import org.springframework.roo.classpath.details.FieldMetadata;
@@ -37,19 +36,20 @@ import org.springframework.roo.support.logging.HandlerUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 /**
  *
- * This abstract class implements MVCViewGenerationService interface
- * that provides all necessary elements to generate views inside project.
+ * This abstract class implements MVCViewGenerationService interface that
+ * provides all necessary elements to generate views inside project.
  *
  * @param <DOC>
  *
@@ -81,35 +81,62 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
   protected abstract DOC parse(String content);
 
-  protected abstract DOC merge(DOC existingDoc, DOC newDoc, List<String> requiredIds);
+  protected abstract DOC merge(String templateName, DOC loadExistingDoc, ViewContext ctx);
+
+
+  protected abstract DOC merge(String templateName, DOC existingDoc, ViewContext ctx,
+      List<FieldItem> fields);
+
+  protected abstract DOC mergeListView(String templateName, DOC loadExistingDoc, ViewContext ctx,
+      EntityItem entity, List<FieldItem> fields, List<DetailEntityItem> details);
+
+  protected abstract DOC mergeMenu(String templateName, DOC loadExistingDoc, ViewContext ctx,
+      List<MenuEntry> menuEntries);
 
   protected abstract String getTemplatesLocation();
 
   protected abstract void writeDoc(DOC document, String viewPath);
+
+  // Id of each container element by page type
+  private static final String CRU_FINDER_LIST_ID_CONTAINER_ELEMENT = "containerFields";
+  private static final String MENU_ID_CONTAINER_ELEMENT = "entitiesMenuEntries";
+  private static final String LANGUAGES_ID_CONTAINER_ELEMENT = "languageFlags";
+
+  private static final String FIELD_SUFFIX = "field";
+  private static final String TABLE_SUFFIX = "entity";
+  private static final String DETAIL_SUFFIX = "detail";
+  private static final String FINDER_SUFFIX = "finder";
 
   @Override
   public void addListView(String moduleName, MemberDetails entityDetails, ViewContext ctx) {
 
     // Getting entity fields that should be included on view
     List<FieldMetadata> entityFields = entityDetails.getFields();
-    List<FieldItem> fields = getFieldViewItems(entityFields, ctx.getEntityName(), true, ctx);
-    List<FieldItem> details = getDetailsFieldViewItems(entityDetails, ctx.getEntityName(), ctx);
-
-    ctx.addExtraParameter("fields", fields);
-    ctx.addExtraParameter("details", details);
+    List<FieldItem> fields =
+        getFieldViewItems(entityFields, ctx.getEntityName(), true, ctx, TABLE_SUFFIX);
+    List<DetailEntityItem> details =
+        getDetailsFieldViewItems(entityDetails, ctx.getEntityName(), ctx, DETAIL_SUFFIX);
 
     // Process elements to generate
-    DOC newDoc = process("list", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
         getViewsFolder(moduleName).concat(ctx.getControllerPath()).concat("/").concat("/list")
             .concat(getViewsExtension());
 
+    EntityItem entityItem =
+        new EntityItem(ctx.getEntityName(), ctx.getIdentifierField(), ctx.getControllerPath(),
+            TABLE_SUFFIX);
+
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc =
-          merge(loadExistingDoc(viewName), newDoc, Arrays.asList(ctx.getEntityName() + "Table"));
+      newDoc = mergeListView("list", loadExistingDoc(viewName), ctx, entityItem, fields, details);
+    } else {
+      ctx.addExtraParameter("entity", entityItem);
+      ctx.addExtraParameter("fields", fields);
+      ctx.addExtraParameter("details", details);
+      newDoc = process("list", ctx);
     }
 
     // Write newDoc on disk
@@ -122,14 +149,17 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Getting entity fields that should be included on view
     List<FieldMetadata> entityFields = entityDetails.getFields();
-    List<FieldItem> fields = getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx);
-    List<FieldItem> details = getDetailsFieldViewItems(entityDetails, ctx.getEntityName(), ctx);
+    List<FieldItem> fields =
+        getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx, FIELD_SUFFIX);
 
-    ctx.addExtraParameter("fields", fields);
+    // TODO: TO BE FIXED when implements details
+    List<FieldItem> details = new ArrayList<FieldItem>();
+    // getDetailsFieldViewItems(entityDetails, ctx.getEntityName(), ctx);
+
     ctx.addExtraParameter("details", details);
 
     // Process elements to generate
-    DOC newDoc = process("show", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -138,12 +168,10 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-
-      List<String> requiredIds = new ArrayList<String>();
-      for (FieldItem field : fields) {
-        requiredIds.add(field.getFieldName());
-      }
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc = merge("show", loadExistingDoc(viewName), ctx, fields);
+    } else {
+      ctx.addExtraParameter("fields", fields);
+      newDoc = process("show", ctx);
     }
 
     // Write newDoc on disk
@@ -156,12 +184,11 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Getting entity fields that should be included on view
     List<FieldMetadata> entityFields = entityDetails.getFields();
-    List<FieldItem> fields = getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx);
-
-    ctx.addExtraParameter("fields", fields);
+    List<FieldItem> fields =
+        getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx, FIELD_SUFFIX);
 
     // Process elements to generate
-    DOC newDoc = process("create", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -170,11 +197,10 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      List<String> requiredIds = new ArrayList<String>();
-      for (FieldItem field : fields) {
-        requiredIds.add(field.getFieldName());
-      }
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc = merge("create", loadExistingDoc(viewName), ctx, fields);
+    } else {
+      ctx.addExtraParameter("fields", fields);
+      newDoc = process("create", ctx);
     }
 
     // Write newDoc on disk
@@ -187,12 +213,11 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Getting entity fields that should be included on view
     List<FieldMetadata> entityFields = entityDetails.getFields();
-    List<FieldItem> fields = getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx);
-
-    ctx.addExtraParameter("fields", fields);
+    List<FieldItem> fields =
+        getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx, FIELD_SUFFIX);
 
     // Process elements to generate
-    DOC newDoc = process("edit", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -201,11 +226,10 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      List<String> requiredIds = new ArrayList<String>();
-      for (FieldItem field : fields) {
-        requiredIds.add(field.getFieldName());
-      }
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc = merge("edit", loadExistingDoc(viewName), ctx, fields);
+    } else {
+      ctx.addExtraParameter("fields", fields);
+      newDoc = process("edit", ctx);
     }
 
     // Write newDoc on disk
@@ -218,7 +242,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
       List<FieldMetadata> fieldsToAdd, ViewContext ctx) {
 
     // Getting entity fields that should be included on view
-    List<FieldItem> fields = getFieldViewItems(fieldsToAdd, ctx.getEntityName(), false, ctx);
+    List<FieldItem> fields =
+        getFieldViewItems(fieldsToAdd, ctx.getEntityName(), false, ctx, FIELD_SUFFIX);
 
     ctx.addExtraParameter("fields", fields);
 
@@ -239,7 +264,7 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
     ctx.addExtraParameter("action", path);
 
     // Process elements to generate
-    DOC newDoc = process("finderForm", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -248,11 +273,9 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      List<String> requiredIds = new ArrayList<String>();
-      for (FieldItem field : fields) {
-        requiredIds.add(field.getFieldName());
-      }
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc = merge("finderForm", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("finderForm", ctx);
     }
 
     // Write newDoc on disk
@@ -260,14 +283,13 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   }
 
   @Override
-  public void addFinderListView(String moduleName, MemberDetails entityDetails, String finderName,
-      ViewContext ctx) {
+  public void addFinderListView(String moduleName, MemberDetails returnTypeDetails,
+      String finderName, ViewContext ctx) {
 
     // Getting entity fields that should be included on view
-    List<FieldMetadata> entityFields = entityDetails.getFields();
-    List<FieldItem> fields = getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx);
-
-    ctx.addExtraParameter("fields", fields);
+    List<FieldMetadata> entityFields = returnTypeDetails.getFields();
+    List<FieldItem> fields =
+        getFieldViewItems(entityFields, ctx.getEntityName(), false, ctx, StringUtils.EMPTY);
 
     // Build URL path to get data
     String path = "";
@@ -286,39 +308,89 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
     ctx.addExtraParameter("finderPath", path);
 
     // Process elements to generate
-    DOC newDoc = process("finderList", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
         getViewsFolder(moduleName).concat(ctx.getControllerPath()).concat("/").concat(finderName)
             .concat("List").concat(getViewsExtension());
 
+    EntityItem entityItem =
+        new EntityItem(ctx.getEntityName(), ctx.getIdentifierField(), ctx.getControllerPath(),
+            FINDER_SUFFIX);
+
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      List<String> requiredIds = new ArrayList<String>();
-      for (FieldItem field : fields) {
-        requiredIds.add(field.getFieldName());
-      }
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc =
+          mergeListView("finderList", loadExistingDoc(viewName), ctx, entityItem, fields,
+              new ArrayList<DetailEntityItem>());
+    } else {
+      ctx.addExtraParameter("fields", fields);
+      newDoc = process("finderList", ctx);
     }
 
     // Write newDoc on disk
     writeDoc(newDoc, viewName);
   }
 
-
   @Override
   public void addIndexView(String moduleName, ViewContext ctx) {
 
     // Process elements to generate
-    DOC newDoc = process("index", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getViewsFolder(moduleName).concat("/index").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("index", loadExistingDoc(viewName), ctx);
+
+    } else {
+      newDoc = process("index", ctx);
+    }
+
+    // Write newDoc on disk
+    writeDoc(newDoc, viewName);
+
+  }
+
+  @Override
+  public void addLoginView(String moduleName, ViewContext ctx) {
+
+    // Process elements to generate
+    DOC newDoc = null;
+
+    // Getting new viewName
+    String viewName = getViewsFolder(moduleName).concat("/login").concat(getViewsExtension());
+
+    // Check if new view to generate exists or not
+    if (existsFile(viewName)) {
+      newDoc = merge("login", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("login", ctx);
+    }
+
+    // Write newDoc on disk
+    writeDoc(newDoc, viewName);
+
+  }
+
+  @Override
+  public void addAccessibilityView(String moduleName, ViewContext ctx) {
+
+    // Process elements to generate
+    DOC newDoc = null;
+
+    // Getting new viewName
+    String viewName =
+        getViewsFolder(moduleName).concat("/accessibility").concat(getViewsExtension());
+
+    // Check if new view to generate exists or not
+    if (existsFile(viewName)) {
+      newDoc = merge("accessibility", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("accessibility", ctx);
     }
 
     // Write newDoc on disk
@@ -330,15 +402,18 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   public void addErrorView(String moduleName, ViewContext ctx) {
 
     // Process elements to generate
-    DOC newDoc = process("error", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getViewsFolder(moduleName).concat("/error").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("error", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("error", ctx);
     }
+
 
     // Write newDoc on disk
     writeDoc(newDoc, viewName);
@@ -349,7 +424,7 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   public void addDefaultLayout(String moduleName, ViewContext ctx) {
 
     // Process elements to generate
-    DOC newDoc = process("layouts/default-layout", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -357,7 +432,31 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("layouts/default-layout", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("layouts/default-layout", ctx);
+    }
+
+    // Write newDoc on disk
+    writeDoc(newDoc, viewName);
+
+  }
+
+  @Override
+  public void addDefaultLayoutNoMenu(String moduleName, ViewContext ctx) {
+
+    // Process elements to generate
+    DOC newDoc = null;
+
+    // Getting new viewName
+    String viewName =
+        getLayoutsFolder(moduleName).concat("/default-layout-no-menu").concat(getViewsExtension());
+
+    // Check if new view to generate exists or not
+    if (existsFile(viewName)) {
+      newDoc = merge("layouts/default-layout-no-menu", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("layouts/default-layout-no-menu", ctx);
     }
 
     // Write newDoc on disk
@@ -368,14 +467,16 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   @Override
   public void addFooter(String moduleName, ViewContext ctx) {
     // Process elements to generate
-    DOC newDoc = process("fragments/footer", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getFragmentsFolder(moduleName).concat("/footer").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("fragments/footer", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("fragments/footer", ctx);
     }
 
     // Write newDoc on disk
@@ -386,14 +487,16 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   @Override
   public void addHeader(String moduleName, ViewContext ctx) {
     // Process elements to generate
-    DOC newDoc = process("fragments/header", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getFragmentsFolder(moduleName).concat("/header").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("fragments/header", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("fragments/header", ctx);
     }
 
     // Write newDoc on disk
@@ -403,8 +506,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
   @Override
   public void addMenu(String moduleName, ViewContext ctx) {
-    // First of all, generate a list of MenuEntries based on existing controllers
-    List<MenuEntry> menuEntries = new ArrayList<MenuEntry>();
+
+    Map<String, MenuEntry> mapMenuEntries = new HashMap<String, MenuEntry>();
 
     Set<ClassOrInterfaceTypeDetails> existingControllers =
         getTypeLocationService().findClassesOrInterfaceDetailsWithAnnotation(
@@ -413,8 +516,6 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
     Iterator<ClassOrInterfaceTypeDetails> it = existingControllers.iterator();
 
     while (it.hasNext()) {
-      // Create new menuEntry element for every controller
-      MenuEntry menuEntry = new MenuEntry();
       // Getting controller and its information
       ClassOrInterfaceTypeDetails controller = it.next();
       AnnotationMetadata controllerAnnotation =
@@ -424,14 +525,30 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
       // Get finders for each controller
       AnnotationMetadata controllerSearchAnnotation =
           controller.getAnnotation(RooJavaType.ROO_SEARCH);
-      List<String> finderNames = new ArrayList<String>();
+      Map<String, String> finderNamesAndPaths = new HashMap<String, String>();
       if (controllerSearchAnnotation != null
           && controllerSearchAnnotation.getAttribute("finders") != null) {
         List<?> finders = (List<?>) controllerSearchAnnotation.getAttribute("finders").getValue();
         Iterator<?> iterator = finders.iterator();
         while (iterator.hasNext()) {
           StringAttributeValue attributeValue = (StringAttributeValue) iterator.next();
-          finderNames.add(attributeValue.getValue());
+          String finderName = attributeValue.getValue();
+
+          // Build URL path to get data
+          String finderPath = "";
+          if (StringUtils.startsWith(finderName, "count")) {
+            finderPath = StringUtils.removeStart(finderName, "count");
+          } else if (StringUtils.startsWith(finderName, "find")) {
+            finderPath = StringUtils.removeStart(finderName, "find");
+          } else if (StringUtils.startsWith(finderName, "query")) {
+            finderPath = StringUtils.removeStart(finderName, "query");
+          } else if (StringUtils.startsWith(finderName, "read")) {
+            finderPath = StringUtils.removeStart(finderName, "read");
+          } else {
+            finderPath = finderName;
+          }
+          finderPath = String.format("search/%s/search-form", StringUtils.uncapitalize(finderPath));
+          finderNamesAndPaths.put(finderName, finderPath);
         }
       }
 
@@ -447,40 +564,55 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
           "/".concat(Noun.pluralOf(StringUtils.uncapitalize(entity.getSimpleTypeName()),
               Locale.ENGLISH));
       if (StringUtils.isNotEmpty(pathPrefix)) {
-        if (!pathPrefix.startsWith("/")) {
-          pathPrefix = "/".concat(pathPrefix);
+        if (pathPrefix.startsWith("/")) {
+          path = pathPrefix.concat(path);
+
+        } else {
+          path = "/".concat(pathPrefix).concat(path);
         }
-        path = pathPrefix.concat(path);
       }
 
-      // Include info inside menuEntry
-      menuEntry.setEntityName(entity.getSimpleTypeName());
-      menuEntry.setPath(path);
-      menuEntry.setEntityLabel(FieldItem.buildLabel(entity.getSimpleTypeName(), ""));
-      menuEntry.setEntityPluralLabel(FieldItem.buildLabel(entity.getSimpleTypeName(), "plural"));
-      menuEntry.setFinders(finderNames);
+      // Create new menuEntry element for controller
+      MenuEntry menuEntry =
+          new MenuEntry(entity.getSimpleTypeName(), path, pathPrefix, FieldItem.buildLabel(
+              entity.getSimpleTypeName(), ""), FieldItem.buildLabel(entity.getSimpleTypeName(),
+              "plural"), finderNamesAndPaths);
+      String keyThatRepresentsEntry = pathPrefix.concat(entity.getSimpleTypeName());
 
-      // Add new menu entry to menuEntries list
-      menuEntries.add(menuEntry);
+      // Add new menu entry to menuEntries list if doesn't exist
+      if (mapMenuEntries.containsKey(keyThatRepresentsEntry)) {
+        MenuEntry menuEntryInserted = mapMenuEntries.get(keyThatRepresentsEntry);
+        if (menuEntryInserted.getFinderNamesAndPaths().isEmpty()
+            && !menuEntry.getFinderNamesAndPaths().isEmpty()) {
+          menuEntryInserted.setFinderNamesAndPaths(menuEntry.getFinderNamesAndPaths());
+        }
+      } else {
+        mapMenuEntries.put(keyThatRepresentsEntry, menuEntry);
+      }
     }
 
-    ctx.addExtraParameter("menuEntries", menuEntries);
+    // First of all, generate a list of MenuEntries based on existing
+    // controllers
+    List<MenuEntry> menuEntries = new ArrayList<MenuEntry>(mapMenuEntries.values());
 
     // Generate ids to search when merge new and existing doc
     List<String> requiredIds = new ArrayList<String>();
     for (MenuEntry entry : menuEntries) {
-      requiredIds.add(entry.getEntityName() + "Entry");
+      requiredIds.add(entry.getPathPrefix().concat(entry.getEntityName()).concat("Entry"));
     }
 
     // Process elements to generate
-    DOC newDoc = process("fragments/menu", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getFragmentsFolder(moduleName).concat("/menu").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc = mergeMenu("fragments/menu", loadExistingDoc(viewName), ctx, menuEntries);
+    } else {
+      ctx.addExtraParameter("menuEntries", menuEntries);
+      newDoc = process("fragments/menu", ctx);
     }
 
     // Write newDoc on disk
@@ -491,14 +623,16 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   @Override
   public void addModal(String moduleName, ViewContext ctx) {
     // Process elements to generate
-    DOC newDoc = process("fragments/modal", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getFragmentsFolder(moduleName).concat("/modal").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("fragments/modal", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("fragments/modal", ctx);
     }
 
     // Write newDoc on disk
@@ -509,14 +643,16 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   @Override
   public void addSession(String moduleName, ViewContext ctx) {
     // Process elements to generate
-    DOC newDoc = process("fragments/session", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName = getFragmentsFolder(moduleName).concat("/session").concat(getViewsExtension());
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("fragments/session", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("fragments/session", ctx);
     }
 
     // Write newDoc on disk
@@ -527,7 +663,7 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   @Override
   public void addSessionLinks(String moduleName, ViewContext ctx) {
     // Process elements to generate
-    DOC newDoc = process("fragments/session-links", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -535,7 +671,9 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, null);
+      newDoc = merge("fragments/session-links", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("fragments/session-links", ctx);
     }
 
     // Write newDoc on disk
@@ -551,7 +689,7 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
     ctx.addExtraParameter("languages", installedLanguages);
 
     // Process elements to generate
-    DOC newDoc = process("fragments/languages", ctx);
+    DOC newDoc = null;
 
     // Getting new viewName
     String viewName =
@@ -565,7 +703,9 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     // Check if new view to generate exists or not
     if (existsFile(viewName)) {
-      newDoc = merge(loadExistingDoc(viewName), newDoc, requiredIds);
+      newDoc = merge("fragments/languages", loadExistingDoc(viewName), ctx);
+    } else {
+      newDoc = process("fragments/languages", ctx);
     }
 
     // Write newDoc on disk
@@ -603,11 +743,12 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
    * @param entityName
    * @param checkMaxFields
    * @param ctx
+   * @param suffixId
    *
    * @return List that contains FieldMetadata that will be added to the view.
    */
   protected List<FieldItem> getFieldViewItems(List<FieldMetadata> entityFields, String entityName,
-      boolean checkMaxFields, ViewContext ctx) {
+      boolean checkMaxFields, ViewContext ctx, String suffixId) {
     int addedFields = 0;
 
     // Getting all controllers
@@ -623,7 +764,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
           && entityField.getAnnotation(JpaJavaType.VERSION) == null) {
 
         // Generating new FieldItem element
-        FieldItem fieldItem = new FieldItem(entityField.getFieldName().getSymbolName(), entityName);
+        FieldItem fieldItem =
+            new FieldItem(entityField.getFieldName().getSymbolName(), entityName, suffixId);
 
         // Calculate fieldType
         JavaType type = entityField.getFieldType();
@@ -640,7 +782,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
           fieldItem.setType(FieldTypes.BOOLEAN.toString());
         } else if (typeDetails != null
             && typeDetails.getPhysicalTypeCategory().equals(PhysicalTypeCategory.ENUMERATION)) {
-          // Saving enum and items to display. Same name as populateForm method
+          // Saving enum and items to display. Same name as
+          // populateForm method
           fieldItem.setType(FieldTypes.ENUM.toString());
           fieldItem.addConfigurationElement("items",
               Noun.pluralOf(entityField.getFieldName().getSymbolName(), Locale.ENGLISH));
@@ -668,7 +811,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
           fieldItem.addConfigurationElement("format", format);
         } else if (type.getFullyQualifiedTypeName().equals("java.util.Set")
             || type.getFullyQualifiedTypeName().equals("java.util.List")) {
-          // Ignore details. To obtain details uses getDetailsFieldViewItems method
+          // Ignore details. To obtain details uses
+          // getDetailsFieldViewItems method
           continue;
         } else {
           fieldItem.setType(FieldTypes.TEXT.toString());
@@ -687,8 +831,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   }
 
   /**
-   * This method obtains all necessary information about details fields from entity
-   * and returns a List of FieldItem.
+   * This method obtains all necessary information about details fields from
+   * entity and returns a List of FieldItem.
    *
    * @param entityDetails
    * @param entityName
@@ -696,19 +840,20 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
    *
    * @return List that contains FieldMetadata that will be added to the view.
    */
-  protected List<FieldItem> getDetailsFieldViewItems(MemberDetails entityDetails,
-      String entityName, ViewContext ctx) {
+  protected List<DetailEntityItem> getDetailsFieldViewItems(MemberDetails entityDetails,
+      String entityName, ViewContext ctx, String suffixId) {
     // Getting entity fields
     List<FieldMetadata> entityFields = entityDetails.getFields();
 
-    List<FieldItem> detailFieldViewItems = new ArrayList<FieldItem>();
+    List<DetailEntityItem> detailFieldViewItems = new ArrayList<DetailEntityItem>();
     for (FieldMetadata entityField : entityFields) {
       // Exclude id and version fields
       if (entityField.getAnnotation(JpaJavaType.ID) == null
           && entityField.getAnnotation(JpaJavaType.VERSION) == null) {
 
         // Generating new FieldItem element
-        FieldItem fieldItem = new FieldItem(entityField.getFieldName().getSymbolName(), entityName);
+        DetailEntityItem detailItem =
+            new DetailEntityItem(entityField.getFieldName().getSymbolName(), suffixId);
 
         // Calculate fieldType
         JavaType type = entityField.getFieldType();
@@ -724,37 +869,37 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
           if (referencedFieldDetails != null
               && referencedFieldDetails.getAnnotation(RooJavaType.ROO_JPA_ENTITY) != null) {
 
-            fieldItem.setType(FieldTypes.LIST.toString());
+            //fieldItem.setType(FieldTypes.LIST.toString());
 
             // Saving necessary configuration
-            fieldItem.addConfigurationElement("referencedFieldType",
+            detailItem.addConfigurationElement("referencedFieldType",
                 referencedField.getSimpleTypeName());
 
             // Getting identifier field
             List<FieldMetadata> identifierFields =
                 getPersistenceMemberLocator().getIdentifierFields(referencedField);
-            fieldItem.addConfigurationElement("identifierField", identifierFields.get(0)
+            detailItem.addConfigurationElement("identifierField", identifierFields.get(0)
                 .getFieldName().getSymbolName());
 
-
-            fieldItem.addConfigurationElement("controllerPath", "/"
+            detailItem.addConfigurationElement("controllerPath", "/"
                 + entityField.getFieldName().getSymbolName().toLowerCase());
 
             // Getting referencedfield label plural
-            fieldItem.addConfigurationElement("referencedFieldLabel",
+            detailItem.addConfigurationElement("referencedFieldLabel",
                 FieldItem.buildLabel(entityName, entityField.getFieldName().getSymbolName()));
 
             // Getting all referenced fields
             List<FieldMetadata> referencedFields =
                 getMemberDetailsScanner().getMemberDetails(getClass().toString(),
                     referencedFieldDetails).getFields();
-            fieldItem.addConfigurationElement(
+            detailItem.addConfigurationElement(
                 "referenceFieldFields",
                 getFieldViewItems(referencedFields, entityName + "."
-                    + entityField.getFieldName().getSymbolName(), true, ctx));
+                    + entityField.getFieldName().getSymbolName(), true, ctx, StringUtils.EMPTY));
 
           } else {
-            // Ignore set or list which base types are not entity field
+            // Ignore set or list which base types are not entity
+            // field
             continue;
           }
 
@@ -763,7 +908,7 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
           continue;
         }
 
-        detailFieldViewItems.add(fieldItem);
+        detailFieldViewItems.add(detailItem);
       }
     }
 
@@ -771,12 +916,13 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
   }
 
   /**
-   * This method obtains all necessary configuration to be able to work
-   * with reference fields.
+   * This method obtains all necessary configuration to be able to work with
+   * reference fields.
    *
-   * Complete provided FieldItem with extra fields. If some extra configuration
-   * is not available, returns false to prevent that this field will be added.
-   * If everything is ok, returns true to add this field to generated view.
+   * Complete provided FieldItem with extra fields. If some extra
+   * configuration is not available, returns false to prevent that this field
+   * will be added. If everything is ok, returns true to add this field to
+   * generated view.
    *
    * @param fieldItem
    * @param typeDetails
@@ -801,7 +947,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
     fieldItem.addConfigurationElement("identifierField", identifierFields.get(0).getFieldName()
         .getSymbolName());
 
-    // Add the controllerPath related to the referencedEntity to configuration
+    // Add the controllerPath related to the referencedEntity to
+    // configuration
     Iterator<ClassOrInterfaceTypeDetails> it = allControllers.iterator();
     String referencedPath = "";
     while (it.hasNext()) {
@@ -831,7 +978,8 @@ public abstract class AbstractViewGenerationService<DOC> implements MVCViewGener
 
     fieldItem.addConfigurationElement("referencedPath", referencedPath);
 
-    // Add one or more fields to configuration, to be able to display content
+    // Add one or more fields to configuration, to be able to display
+    // content
     String fieldOne = "";
     String fieldTwo = "";
     MemberDetails referencedEntityDetails =

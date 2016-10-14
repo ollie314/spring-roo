@@ -33,6 +33,9 @@ import org.springframework.roo.model.JavaSymbolName;
 import org.springframework.roo.model.JavaType;
 import org.springframework.roo.model.RooJavaType;
 import org.springframework.roo.process.manager.FileManager;
+import org.springframework.roo.project.Dependency;
+import org.springframework.roo.project.DependencyScope;
+import org.springframework.roo.project.DependencyType;
 import org.springframework.roo.project.Path;
 import org.springframework.roo.project.PathResolver;
 import org.springframework.roo.project.ProjectOperations;
@@ -40,7 +43,7 @@ import org.springframework.roo.support.logging.HandlerUtils;
 
 /**
  * Class that implements {@link ServiceOperations}.
- * 
+ *
  * @author Stefan Schmidt
  * @author Juan Carlos García
  * @since 1.2.0
@@ -211,7 +214,7 @@ public class ServiceOperationsImpl implements ServiceOperations {
 
   /**
    * Method that creates the service interface
-   * 
+   *
    * @param domainType
    * @param interfaceType
    */
@@ -253,26 +256,14 @@ public class ServiceOperationsImpl implements ServiceOperations {
 
     // Add dependencies between modules
     projectOperations.addModuleDependency(interfaceType.getModule(), domainType.getModule());
-
-    // Getting the class annotated with @RooGlobalSearch
-    Set<ClassOrInterfaceTypeDetails> globalSearchDetails =
-        typeLocationService
-            .findClassesOrInterfaceDetailsWithAnnotation(RooJavaType.ROO_GLOBAL_SEARCH);
-
-    if (globalSearchDetails.size() == 0) {
-      throw new RuntimeException("ERROR: Not found a class annotated with @RooGlobalSearch");
-    }
-
-    JavaType globalSearch = globalSearchDetails.iterator().next().getType();
-    projectOperations.addModuleDependency(interfaceType.getModule(), globalSearch.getModule());
   }
 
   /**
    * Method that creates the service implementation
-   * 
+   *
    * @param interfaceType
    * @param implType
-   * @param domainType 
+   * @param domainType
    */
   private void createServiceImplementation(final JavaType interfaceType, JavaType implType,
       ClassOrInterfaceTypeDetails repository, JavaType domainType) {
@@ -329,5 +320,12 @@ public class ServiceOperationsImpl implements ServiceOperations {
     projectOperations.addModuleDependency(implType.getModule(), interfaceType.getModule());
     projectOperations.addModuleDependency(implType.getModule(), repository.getName().getModule());
     projectOperations.addModuleDependency(implType.getModule(), domainType.getModule());
+
+    // ROO-3799 Included dependency spring-tx if it's a multimodule project
+    if (projectOperations.isMultimoduleProject()) {
+      projectOperations.addDependency(implType.getModule(), new Dependency("org.springframework",
+          "spring-tx", "", DependencyType.JAR, DependencyScope.COMPILE));
+    }
+
   }
 }

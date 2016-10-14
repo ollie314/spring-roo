@@ -77,6 +77,8 @@ public final class RooJavaType {
   // Spring Roo 2.x annotations
   public static final JavaType ROO_JPA_ENTITY = new JavaType(
       "org.springframework.roo.addon.jpa.annotations.entity.RooJpaEntity");
+  public static final JavaType ROO_JPA_RELATION = new JavaType(
+      "org.springframework.roo.addon.jpa.annotations.entity.RooJpaRelation");
   public static final JavaType ROO_ENTITY_PROJECTION = new JavaType(
       "org.springframework.roo.addon.dto.annotations.RooEntityProjection");
   public static final JavaType ROO_READ_ONLY_REPOSITORY = new JavaType(
@@ -93,10 +95,8 @@ public final class RooJavaType {
       "org.springframework.roo.addon.layers.service.annotations.RooService");
   public static final JavaType ROO_SERVICE_IMPL = new JavaType(
       "org.springframework.roo.addon.layers.service.annotations.RooServiceImpl");
-  public static final JavaType ROO_SECURITY_CONFIGURATION = new JavaType(
-      "org.springframework.roo.addon.security.annotations.RooSecurityConfiguration");
-  public static final JavaType ROO_AUDIT = new JavaType(
-      "org.springframework.roo.addon.security.annotations.RooAudit");
+  public static final JavaType ROO_JPA_AUDIT = new JavaType(
+      "org.springframework.roo.addon.jpa.annotations.audit.RooJpaAudit");
   public static final JavaType ROO_UNIT_TEST = new JavaType(
       "org.springframework.roo.addon.test.annotations.RooUnitTest");
   public static final JavaType ROO_CONTROLLER = new JavaType(
@@ -130,8 +130,6 @@ public final class RooJavaType {
           "org.springframework.roo.addon.web.mvc.thymeleaf.annotations.RooThymeleafDatatablesSortHandler");
   public static final JavaType ROO_THYMELEAF_DATATABLES_SORT = new JavaType(
       "org.springframework.roo.addon.web.mvc.thymeleaf.annotations.RooThymeleafDatatablesSort");
-  public static final JavaType ROO_GLOBAL_SEARCH = new JavaType(
-      "org.springframework.roo.addon.layers.repository.jpa.annotations.RooGlobalSearch");
   public static final JavaType ROO_GLOBAL_SEARCH_HANDLER = new JavaType(
       "org.springframework.roo.addon.web.mvc.controller.annotations.RooGlobalSearchHandler");
 
@@ -163,6 +161,9 @@ public final class RooJavaType {
 
   public static final JavaType ROO_ENUM_CONTROLLER_TYPE = new JavaType(
       "org.springframework.roo.addon.web.mvc.controller.annotations.ControllerType");
+
+  public static final JavaType ROO_ENUM_RELATION_TYPE = new JavaType(
+      "org.springframework.roo.addon.jpa.annotations.entity.JpaRelationType");
 
   /**
    * Constructor is private to prevent instantiation

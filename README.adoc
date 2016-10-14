@@ -11,7 +11,7 @@
 // PDF Asciidoctor:
 //   asciidoctor-pdf -a pdf-style=asciidoctor README.adoc
 
-= Spring Roo image:https://build.spring.io/plugins/servlet/buildStatusImage/ROO-BUILD["Build Status", link="https://build.spring.io/browse/ROO-BUILD"] image:https://badges.gitter.im/Join Chat.svg["Chat",link="https://gitter.im/spring-projects/spring-roo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
+= Spring Roo image:https://build.spring.io/plugins/servlet/buildStatusImage/ROO-BUILD["Build Status", link="https://build.spring.io/browse/ROO-BUILD"]
 Getting started with Spring Roo development
 :page-layout: base
 :toc-placement: manual
@@ -232,6 +232,8 @@ IMPORTANT: _Don't try to run *roo-dev* from your $ROO_HOME directory._
 Notice we used _"mvn install"_ rather than _"mvn package"_. This is simply for
 convenience, as it will allow you to _"cd"_ into any Roo module subdirectory and
 _"mvn install"_. This saves considerable build time if changes are only being made in a single module.
+
+Also take into account _"mvn install"_ will perform some release related tasks, like generating the javadoc, the documentation from asciidoc, and generating the javadoc and source jars for each module. Those steps take a big amount of time to be performed, so to skip them just add the parameter _"-DskipRelease"_.
 
 Roo ships with a command line tool called *roo-dev*. This is also a Windows
 equivalent. It copies all relevant JARs from the Roo directories into

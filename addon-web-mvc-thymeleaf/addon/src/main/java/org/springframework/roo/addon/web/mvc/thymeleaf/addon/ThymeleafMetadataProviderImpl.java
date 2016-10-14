@@ -50,6 +50,7 @@ import org.springframework.roo.model.Jsr303JavaType;
 import org.springframework.roo.model.RooJavaType;
 import org.springframework.roo.model.SpringEnumDetails;
 import org.springframework.roo.model.SpringJavaType;
+import org.springframework.roo.model.SpringletsJavaType;
 import org.springframework.roo.project.LogicalPath;
 import org.springframework.roo.support.logging.HandlerUtils;
 
@@ -87,7 +88,6 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
   protected MetadataDependencyRegistryTracker registryTracker = null;
   protected CustomDataKeyDecoratorTracker keyDecoratorTracker = null;
 
-  private JavaType globalSearchType;
   private JavaType datatablesDataType;
   private JavaType datatablesPageable;
 
@@ -216,19 +216,6 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
 
     // Getting service details
     final ServiceMetadata serviceMetadata = getServiceMetadata();
-
-    // Getting Global search class
-    Set<ClassOrInterfaceTypeDetails> globalSearchClasses =
-        getTypeLocationService().findClassesOrInterfaceDetailsWithAnnotation(
-            RooJavaType.ROO_GLOBAL_SEARCH);
-    if (globalSearchClasses.isEmpty()) {
-      throw new RuntimeException("ERROR: GlobalSearch.java file doesn't exist or has been deleted.");
-    }
-    Iterator<ClassOrInterfaceTypeDetails> gobalSearchClassIterator = globalSearchClasses.iterator();
-    while (gobalSearchClassIterator.hasNext()) {
-      this.globalSearchType = gobalSearchClassIterator.next().getType();
-      break;
-    }
 
     // Getting DatatablesDataType
     Set<ClassOrInterfaceTypeDetails> datatablesDataClasses =
@@ -507,7 +494,8 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
     }
 
     List<AnnotatedJavaType> parameterTypes = new ArrayList<AnnotatedJavaType>();
-    parameterTypes.add(AnnotatedJavaType.convertFromJavaType(this.globalSearchType));
+    parameterTypes.add(AnnotatedJavaType
+        .convertFromJavaType(SpringletsJavaType.SPRINGLETS_GLOBAL_SEARCH));
     parameterTypes.add(new AnnotatedJavaType(SpringJavaType.PAGEABLE, pageableDefaultAnnotation
         .build()));
 
@@ -586,7 +574,8 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
     final JavaSymbolName methodName = new JavaSymbolName("list");
 
     List<AnnotatedJavaType> parameterTypes = new ArrayList<AnnotatedJavaType>();
-    parameterTypes.add(AnnotatedJavaType.convertFromJavaType(this.globalSearchType));
+    parameterTypes.add(AnnotatedJavaType
+        .convertFromJavaType(SpringletsJavaType.SPRINGLETS_GLOBAL_SEARCH));
     parameterTypes.add(AnnotatedJavaType.convertFromJavaType(this.datatablesPageable));
     AnnotationMetadataBuilder requestParamAnnotation =
         new AnnotationMetadataBuilder(SpringJavaType.REQUEST_PARAM);
@@ -1130,8 +1119,8 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
             requestParamAnnotation.build()));
         parameterNames.add(originalParameterNames.get(i));
         finderParamsString.append(originalParameterNames.get(i).getSymbolName());
-      } else if (originalParameterTypes.get(i).getJavaType().getSimpleTypeName()
-          .equals("GlobalSearch")) {
+      } else if (originalParameterTypes.get(i).getJavaType()
+          .equals(SpringletsJavaType.SPRINGLETS_GLOBAL_SEARCH)) {
         parameterTypes.add(originalParameterTypes.get(i));
         addTypeToImport(originalParameterTypes.get(i).getJavaType());
         parameterNames.add(originalParameterNames.get(i));
@@ -1359,14 +1348,21 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
     List<AnnotatedJavaType> parameterTypes = new ArrayList<AnnotatedJavaType>();
     List<JavaSymbolName> parameterNames = new ArrayList<JavaSymbolName>();
 
+    // Check if finder parameter is a DTO
+    JavaType formBean = finderMethod.getParameterTypes().get(0).getJavaType();
+    if (getTypeLocationService().getTypeDetails(formBean) != null
+        && getTypeLocationService().getTypeDetails(formBean).getAnnotation(RooJavaType.ROO_DTO) == null) {
+
+      // Finder parameter are entity fields
+      formBean = this.entity;
+    }
+
     // Add form bean parameter
     AnnotationMetadataBuilder modelAttributeAnnotation =
         new AnnotationMetadataBuilder(SpringJavaType.MODEL_ATTRIBUTE);
-    modelAttributeAnnotation.addStringAttribute("value", originalParameterNames.get(0)
-        .getSymbolName());
-    parameterTypes.add(new AnnotatedJavaType(originalParameterTypes.get(0).getJavaType(),
-        modelAttributeAnnotation.build()));
-    parameterNames.add(originalParameterNames.get(0));
+    modelAttributeAnnotation.addStringAttribute("value", "formBean");
+    parameterTypes.add(new AnnotatedJavaType(formBean, modelAttributeAnnotation.build()));
+    parameterNames.add(new JavaSymbolName("formBean"));
 
     // Add redirect parameter
     parameterTypes.add(AnnotatedJavaType
@@ -1409,6 +1405,7 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
    * @return
    */
   private MethodMetadata getFinderFormMethod(MethodMetadata finderMethod) {
+
     // Get finder parameter names
     List<String> stringParameterNames = new ArrayList<String>();
     stringParameterNames.add("model");
@@ -1459,19 +1456,26 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
         SpringEnumDetails.REQUEST_METHOD_GET, "/" + path, stringParameterNames, null,
         SpringEnumDetails.MEDIA_TYPE_TEXT_HTML_VALUE, ""));
 
+    // Check if finder parameter is a DTO
+    JavaType formBean = finderMethod.getParameterTypes().get(0).getJavaType();
+    if (getTypeLocationService().getTypeDetails(formBean) != null
+        && getTypeLocationService().getTypeDetails(formBean).getAnnotation(RooJavaType.ROO_DTO) == null) {
+
+      // Finder parameter are entity fields
+      formBean = this.entity;
+    }
+
     // Generate body
     InvocableMemberBodyBuilder bodyBuilder = new InvocableMemberBodyBuilder();
     bodyBuilder.newLine();
 
     // Entity/DTO search = new Entity/DTO();
-    bodyBuilder.appendFormalLine(String.format("%1$s %2$s = new %1$s();",
-        addTypeToImport(finderMethod.getParameterTypes().get(0).getJavaType()).getSimpleTypeName(),
-        finderMethod.getParameterNames().get(0).getSymbolName()));
+    bodyBuilder.appendFormalLine(String.format("%1$s %2$s = new %1$s();", addTypeToImport(formBean)
+        .getSimpleTypeName(), "formBean"));
     bodyBuilder.newLine();
 
     // model.addAttribute("search", search);
-    bodyBuilder.appendFormalLine(String.format("model.addAttribute(\"%1$s\", %1$s);", finderMethod
-        .getParameterNames().get(0).getSymbolName()));
+    bodyBuilder.appendFormalLine(String.format("model.addAttribute(\"%1$s\", %1$s);", "formBean"));
     bodyBuilder.newLine();
 
     // populateForm(model);
@@ -2152,8 +2156,7 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
         new AnnotationMetadataBuilder(SpringJavaType.MODEL_ATTRIBUTE);
     parameterTypes.add(new AnnotatedJavaType(this.controllerDetailInfo.getParentEntity(),
         modelAttributeAnnotation.build()));
-    Validate.notNull(this.globalSearchType, "Couldn't find GlobalSearch in project.");
-    parameterTypes.add(new AnnotatedJavaType(this.globalSearchType));
+    parameterTypes.add(new AnnotatedJavaType(SpringletsJavaType.SPRINGLETS_GLOBAL_SEARCH));
     parameterTypes.add(new AnnotatedJavaType(SpringJavaType.PAGEABLE, pageableDefaultAnnotation
         .build()));
 
@@ -2302,7 +2305,8 @@ public class ThymeleafMetadataProviderImpl extends AbstractViewGeneratorMetadata
         new AnnotationMetadataBuilder(SpringJavaType.MODEL_ATTRIBUTE);
     parameterTypes.add(new AnnotatedJavaType(this.controllerDetailInfo.getParentEntity(),
         modelAttributeAnnotation.build()));
-    parameterTypes.add(AnnotatedJavaType.convertFromJavaType(this.globalSearchType));
+    parameterTypes.add(AnnotatedJavaType
+        .convertFromJavaType(SpringletsJavaType.SPRINGLETS_GLOBAL_SEARCH));
     parameterTypes.add(AnnotatedJavaType.convertFromJavaType(this.datatablesPageable));
     AnnotationMetadataBuilder requestParamAnnotation =
         new AnnotationMetadataBuilder(SpringJavaType.REQUEST_PARAM);
